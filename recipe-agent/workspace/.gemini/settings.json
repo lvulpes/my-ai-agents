@@ -1,0 +1,18 @@
+{
+  "model": {
+    "name": "gemini-3.5-flash-lite"
+  },
+  "modelConfigs": {
+    "modelIdResolutions": {
+      "gemini-3.5-flash-lite": {
+        "default": "gemini-3.5-flash-lite",
+        "contexts": []
+      }
+    }
+  },
+  "security": {
+    "auth": {
+      "selectedType": "gemini-api-key"
+    }
+  }
+}
