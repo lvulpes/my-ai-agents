@@ -1,4 +1,4 @@
-FROM python:3.11-slim
+FROM node:22-slim
+RUN npm install -g @google/gemini-cli
 WORKDIR /workspace
-RUN pip install --no-cache-dir crewai google-genai
-COPY . .
+ENTRYPOINT ["gemini"]
