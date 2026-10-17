@@ -1,0 +1,11 @@
+services:
+  gemini:
+    build: .
+    container_name: gemini-chat
+    environment:
+      - GEMINI_API_KEY=${GEMINI_CODE_API_KEY}
+      - HOME=/workspace
+    volumes:
+      - ./workspace:/workspace:z
+    stdin_open: true
+    tty: true
