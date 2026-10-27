@@ -3,9 +3,19 @@ Collection of docker containers with different AI agents
 
 # Quick start guide
 
+Rebuild the image when changes have been made:
+``` terminal
+docker compose build
+```
+
 Spin up a container and connect to it:
 ``` terminal
 docker compose run --rm gemini
+```
+
+If you want to connect directly to the container to run commands:
+``` terminal
+docker compose run --rm --entrypoint /bin/bash gemini
 ```
 
 If you need to verify the container is up:
