@@ -5,7 +5,8 @@ Collection of docker containers with different AI agents
 
 Spin up a container and connect to it:
 ``` terminal
-docker compose run --rm gemini
+docker compose run --rm gemini 
+docker compose run --rm rea-claude
 ```
 
 If you need to verify the container is up:

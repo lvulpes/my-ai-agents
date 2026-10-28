@@ -1,0 +1,25 @@
+services:
+  rea-claude:
+    build: .
+    image: rea-claude
+    user: "1000:1000"
+    working_dir: /work
+    stdin_open: true
+    tty: true
+    command: claude
+    environment:
+      HOME: /home/node
+    security_opt:
+      - no-new-privileges:true
+      - label:disable
+    cap_drop:
+      - ALL
+    devices:
+      - /dev/bus/usb:/dev/bus/usb
+    volumes:
+      - ./cases:/work/cases
+      - ./.claude:/home/node/.claude
+      - ${HOME}/.android:/home/node/.android
+      - ./claude.json:/home/node/.claude.json
+    group_add:
+      - "1001"
