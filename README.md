@@ -10,7 +10,8 @@ docker compose build
 
 Spin up a container and connect to it:
 ``` terminal
-docker compose run --rm gemini
+docker compose run --rm gemini 
+docker compose run --rm rea-claude
 ```
 
 If you want to connect directly to the container to run commands:
