@@ -218,3 +218,9 @@ __marimo__/
 
 # Streamlit
 .streamlit/secrets.toml
+
+# rea inside this repo
+rea-mobile/rea
+
+# recipes
+recipe-agent/workspace/recipes
