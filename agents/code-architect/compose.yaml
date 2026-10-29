@@ -1,0 +1,24 @@
+name: code-architect
+
+services:
+  code-architect:
+    build: ../../images/aider
+    image: my-ai-agents/aider:local
+    entrypoint: ["aider", "--config", "/config/.aider.conf.yml"]
+    user: "1000:1000"
+    working_dir: /work
+    stdin_open: true
+    tty: true
+    environment:
+      AIDER_MODEL: ${MODEL:?set MODEL in .env or pass --model}
+      GROQ_API_KEY: ${GROQ_API_KEY:-}
+      GEMINI_API_KEY: ${GEMINI_ACADEMIC_CODE_KEY:-}
+    security_opt:
+      - no-new-privileges:true
+    cap_drop:
+      - ALL
+    volumes:
+      - ${WORKSPACE_DIR:?set WORKSPACE_DIR in .env}:/work:z
+      - ./state:/home/agent:z
+      - ./.aider.conf.yml:/config/.aider.conf.yml:ro,z
+      - ../../skills:/skills:ro,z

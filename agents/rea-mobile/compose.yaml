@@ -1,0 +1,43 @@
+name: rea-mobile
+
+services:
+  # Build-only: provides `FROM base` for the job image
+  claude-code-base:
+    build: ../../images/claude-code
+    image: my-ai-agents/claude-code:local
+    scale: 0
+
+  rea-mobile:
+    build:
+      context: .
+      additional_contexts:
+        base: service:claude-code-base
+    image: my-ai-agents/rea-mobile:local
+    user: "1000:1000"
+    working_dir: /work
+    stdin_open: true
+    tty: true
+    # ANTHROPIC_API_KEY comes from .env if set; otherwise the subscription login in state/ is used
+    env_file:
+      - path: .env
+        required: false
+    environment:
+      HOME: /home/node
+      ANTHROPIC_MODEL: ${MODEL:?set MODEL in .env or pass --model}
+    security_opt:
+      - no-new-privileges:true
+      - label:disable
+    cap_drop:
+      - ALL
+    devices:
+      - /dev/bus/usb:/dev/bus/usb
+    volumes:
+      - ./cases:/work/cases
+      - ./evidence:/work/evidence:ro
+      - ./state/.claude:/home/node/.claude
+      - ./state/claude.json:/home/node/.claude.json
+      - ${ANDROID_KEYS_DIR:-${HOME}/.android}:/home/node/.android
+      - ./CLAUDE.md:/work/CLAUDE.md:ro
+      - ../../skills:/work/.claude/skills:ro
+    group_add:
+      - "1001"
