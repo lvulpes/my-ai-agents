@@ -1,0 +1,23 @@
+# Recipe generator. Architect mode: Gemini reasons, Groq writes the files.
+# MODEL in .env (or ./run.sh recipe --model ...) overrides `model` via AIDER_MODEL.
+model: gemini/gemini-3.8-flash
+architect: true
+editor-model: groq/openai/gpt-oss-120b
+weak-model: groq/openai/gpt-oss-120b
+
+# Job instructions (from the old Gemini CLI setup), loaded read-only
+read:
+  - GEMINI.md
+  - .gemini/system.md
+
+# workspace/ is not a git repo
+git: false
+auto-commits: false
+gitignore: false
+
+# Keep aider's own files in state/, not in workspace/
+input-history-file: /home/agent/.aider.input.history
+chat-history-file: /home/agent/.aider.chat.history.md
+
+analytics: false
+check-update: false

@@ -1,0 +1,14 @@
+# Network forensics on pcaps. Evidence is mounted read-only at /work/evidence;
+# notes, scripts and reports go in /work/cases (the working directory).
+# MODEL in .env (or ./run.sh network-forensics --model ...) overrides `model` via AIDER_MODEL.
+model: groq/openai/gpt-oss-120b
+
+git: false
+auto-commits: false
+gitignore: false
+
+input-history-file: /home/agent/.aider.input.history
+chat-history-file: /home/agent/.aider.chat.history.md
+
+analytics: false
+check-update: false

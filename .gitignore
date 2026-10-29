@@ -220,7 +220,37 @@ __marimo__/
 .streamlit/secrets.toml
 
 # rea inside this repo
-rea-mobile/rea
+agents/rea-mobile/rea
 
 # recipes
-recipe-agent/workspace/recipes
+agents/recipe/workspace/recipes
+
+# --- Agent CLI state and credentials: never commit ---
+# Claude Code state (OAuth tokens, history, caches, synced skills)
+**/.claude/
+**/.claude.json
+**/.credentials.json
+# Gemini CLI state (keychain fallback file, settings with apiKey, chats)
+**/.gemini/*
+!agents/recipe/workspace/.gemini/system.md
+# adb host keys
+**/.android/
+# Any other credential/secret files
+*credentials*.json
+.env.*
+!.env.example
+
+# --- Job data: keep the folders, ignore the contents ---
+agents/*/state/*
+!agents/*/state/.gitkeep
+agents/*/cases/*
+!agents/*/cases/.gitkeep
+agents/*/evidence/*
+!agents/*/evidence/.gitkeep
+# aider runtime files (keep .aider.conf.yml)
+.aider.chat.history.md
+.aider.input.history
+.aider.tags.cache*/
+
+# Restructure working notes
+RESTRUCTURE_PLAN.md

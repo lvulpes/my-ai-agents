@@ -1,0 +1,18 @@
+# Coding job on an external repo (WORKSPACE_DIR in .env).
+# Architect mode: Gemini plans, Groq writes the edits.
+# MODEL in .env (or ./run.sh code-architect --model ...) overrides `model` via AIDER_MODEL.
+model: gemini/gemini-3.1-pro-preview
+architect: true
+editor-model: groq/openai/gpt-oss-120b
+weak-model: groq/openai/gpt-oss-120b
+
+# You review and commit yourself; don't touch the target repo's .gitignore
+auto-commits: false
+gitignore: false
+
+# Keep aider's own files in state/, not in the target repo
+input-history-file: /home/agent/.aider.input.history
+chat-history-file: /home/agent/.aider.chat.history.md
+
+analytics: false
+check-update: false
