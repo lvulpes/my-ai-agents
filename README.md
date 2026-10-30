@@ -15,6 +15,7 @@ run.sh                              launcher
 | `code-architect` | aider, architect | `gemini/gemini-3.1-pro-preview`, edits by `groq/openai/gpt-oss-120b` | `$WORKSPACE_DIR` | |
 | `network-forensics` | aider + tshark | `groq/openai/gpt-oss-120b` | `cases/` | `evidence/` (pcaps) |
 | `rea-mobile` | claude-code + adb/REA | `opus` | `cases/` | `evidence/` (phone images), USB device |
+| `claude-developer` | claude-code + python/shellcheck | `opus` | `$WORKSPACE_DIR`, normally this repo (minus `masks`) | `CLAUDE.md` |
 
 **Models.** Each job's `.env` sets `MODEL=`. `--model` overrides it for one run.
 - aider: Groq (`GROQ_API_KEY`) does the edits. In architect mode, Gemini (`GEMINI_*` key) does the reasoning.
@@ -39,3 +40,4 @@ The first run builds the images. Rebuild after changes with `docker compose -f a
 - Secrets live only in `agents/<job>/.env` (gitignored). Tool logins and state live in `agents/<job>/state/` (gitignored), never in the data folder.
 - Containers run as uid 1000 with `cap_drop: ALL` and `no-new-privileges`. They never get the Docker socket, `$HOME` or `/`.
 - Evidence is always mounted `:ro`.
+- `claude-developer` manages this repo, so its `WORKSPACE_DIR` normally points here. `run.sh` hides the paths in `agents/claude-developer/masks` (every `.env`, `state/`, `cases/`, `evidence/`, ...) by mounting empty files and folders over them. A new job's secrets are covered automatically as long as they follow these folder names.

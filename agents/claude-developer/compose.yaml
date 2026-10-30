@@ -1,0 +1,38 @@
+name: claude-developer
+
+services:
+  # Build-only: provides `FROM base` for the job image
+  claude-code-base:
+    build: ../../images/claude-code
+    image: my-ai-agents/claude-code:local
+    scale: 0
+
+  claude-developer:
+    build:
+      context: .
+      additional_contexts:
+        base: service:claude-code-base
+    image: my-ai-agents/claude-developer:local
+    user: "1000:1000"
+    working_dir: /work
+    stdin_open: true
+    tty: true
+    # ANTHROPIC_API_KEY comes from .env if set; otherwise the subscription login in state/ is used
+    env_file:
+      - path: .env
+        required: false
+    environment:
+      HOME: /home/node
+      ANTHROPIC_MODEL: ${MODEL:?set MODEL in .env or pass --model}
+    security_opt:
+      - no-new-privileges:true
+      # No :z relabel of the whole repo, so evidence file metadata is never modified
+      - label:disable
+    cap_drop:
+      - ALL
+    # run.sh hides the paths listed in ./masks inside WORKSPACE_DIR
+    volumes:
+      - ${WORKSPACE_DIR:?set WORKSPACE_DIR in .env}:/work
+      - ./state/.claude:/home/node/.claude
+      - ./state/claude.json:/home/node/.claude.json
+      - ./CLAUDE.md:/home/node/.claude/CLAUDE.md:ro
