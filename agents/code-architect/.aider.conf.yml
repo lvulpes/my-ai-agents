@@ -1,6 +1,6 @@
 # Coding job on an external repo (WORKSPACE_DIR in .env).
 # Architect mode: Gemini plans, Groq writes the edits.
-# MODEL in .env (or ./run.sh code-architect --model ...) overrides `model` via AIDER_MODEL.
+# MODEL_AIDER in .env (or ./run.sh code-architect --model ...) overrides `model` via AIDER_MODEL.
 model: gemini/gemini-3.1-pro-preview
 architect: true
 editor-model: groq/openai/gpt-oss-120b

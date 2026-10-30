@@ -1,5 +1,5 @@
 # Recipe generator. Architect mode: Gemini reasons, Groq writes the files.
-# MODEL in .env (or ./run.sh recipe --model ...) overrides `model` via AIDER_MODEL.
+# MODEL_AIDER in .env (or ./run.sh recipe --model ...) overrides `model` via AIDER_MODEL.
 model: gemini/gemini-3.8-flash
 architect: true
 editor-model: groq/openai/gpt-oss-120b
