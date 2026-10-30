@@ -1,25 +1,42 @@
 #!/usr/bin/env bash
-# Launch a job: ./run.sh <job> [--model <name>] [-- <extra args>]
+# Launch a job: ./run.sh <job> [--tool <tool>] [--model <name>] [-- <extra args>]
 set -euo pipefail
 
 ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 AGENTS="$ROOT/agents"
 
+# Tools a job supports: one agents/<job>/compose.<tool>.yaml each.
+# Prints nothing for a single-tool job, whose compose.yaml is complete.
+job_tools() {
+  local f
+  for f in "$1"/compose.*.yaml; do
+    [[ -f "$f" ]] || continue
+    f="${f##*/compose.}"
+    printf '%s\n' "${f%.yaml}"
+  done
+}
+
 list_jobs() {
-  local d
+  local d tools
   for d in "$AGENTS"/*/; do
-    [[ -f "$d/compose.yaml" ]] && printf '  %s\n' "$(basename "$d")"
+    [[ -f "$d/compose.yaml" ]] || continue
+    tools="$(job_tools "$d" | paste -sd, -)"
+    printf '  %s%s\n' "$(basename "$d")" "${tools:+  (tools: $tools)}"
   done
 }
 
 usage() {
   cat <<EOF
-Usage: ./run.sh <job> [--model <name>] [-- <extra args>]
+Usage: ./run.sh <job> [--tool <tool>] [--model <name>] [-- <extra args>]
 
 Starts agents/<job>/compose.yaml with 'docker compose run --rm <job>'.
+Jobs that support several tools also get agents/<job>/compose.<tool>.yaml.
 
 Options:
-  --model <name>   Model for this run only (default: MODEL= in agents/<job>/.env).
+  --tool <tool>    Tool for this run only (default: TOOL= in agents/<job>/.env).
+                   Only for jobs that list several tools below.
+  --model <name>   Model for this run only (default: MODEL_<TOOL>= in
+                   agents/<job>/.env, e.g. MODEL_CLAUDE_CODE=, then MODEL=).
                    Passed straight to the tool, not validated.
   -- <args>        Everything after -- goes to the tool (aider / claude).
   -h, --help       Show this help.
@@ -77,6 +94,7 @@ case "$1" in
 esac
 
 job="$1"; shift
+tool_override=""
 model_override=""
 extra=()
 
@@ -87,6 +105,11 @@ while [[ $# -gt 0 ]]; do
       model_override="$2"; shift 2 ;;
     --model=*)
       model_override="${1#--model=}"; shift ;;
+    --tool)
+      [[ $# -ge 2 && -n "$2" ]] || { echo "error: --tool needs a value" >&2; exit 1; }
+      tool_override="$2"; shift 2 ;;
+    --tool=*)
+      tool_override="${1#--tool=}"; shift ;;
     -h|--help) usage; exit 0 ;;
     --) shift; extra=("$@"); break ;;
     *) echo "error: unknown argument '$1' (tool args go after --)" >&2; exit 1 ;;
@@ -101,29 +124,65 @@ if [[ ! "$job" =~ ^[A-Za-z0-9][A-Za-z0-9._-]*$ || ! -f "$AGENTS/$job/compose.yam
 fi
 
 job_dir="$AGENTS/$job"
-MODEL="${model_override:-$(dotenv_get "$job_dir/.env" MODEL)}"
+compose_files=(-f "$job_dir/compose.yaml")
+job_files=("$job_dir/compose.yaml")
+
+mapfile -t tools < <(job_tools "$job_dir")
+default_tool="$(dotenv_get "$job_dir/.env" TOOL)"
+if [[ ${#tools[@]} -eq 0 ]]; then
+  # Single-tool job: compose.yaml has everything, the model is MODEL=
+  if [[ -n "$tool_override" ]]; then
+    echo "error: job '$job' has a single tool, --tool is not supported" >&2
+    exit 1
+  fi
+  tool="$(sed -n 's|^ *image: my-ai-agents/\([^:]*\):.*|\1|p' "$job_dir/compose.yaml" | head -n1)"
+  model_key="MODEL"
+  MODEL="${model_override:-$(dotenv_get "$job_dir/.env" MODEL)}"
+else
+  tool="${tool_override:-$default_tool}"
+  if [[ -z "$tool" ]]; then
+    echo "error: no tool. Set TOOL= in agents/$job/.env or pass --tool ($(IFS=,; echo "${tools[*]}"))" >&2
+    exit 1
+  fi
+  if [[ ! -f "$job_dir/compose.$tool.yaml" || ! "$tool" =~ ^[A-Za-z0-9][A-Za-z0-9._-]*$ ]]; then
+    echo "error: job '$job' has no tool '$tool'. Available: $(IFS=,; echo "${tools[*]}")" >&2
+    exit 1
+  fi
+  compose_files+=(-f "$job_dir/compose.$tool.yaml")
+  job_files+=("$job_dir/compose.$tool.yaml")
+  # claude-code -> MODEL_CLAUDE_CODE
+  model_key="MODEL_$(tr 'a-z-' 'A-Z_' <<<"$tool")"
+  MODEL="${model_override:-$(dotenv_get "$job_dir/.env" "$model_key")}"
+  # MODEL= still works for the default tool (older .env files)
+  if [[ -z "$MODEL" && "$tool" == "$default_tool" ]]; then
+    MODEL="$(dotenv_get "$job_dir/.env" MODEL)"
+  fi
+fi
 if [[ -z "$MODEL" ]]; then
-  echo "error: no model. Set MODEL= in agents/$job/.env or pass --model" >&2
+  echo "error: no model. Set $model_key= in agents/$job/.env or pass --model" >&2
   exit 1
 fi
 export MODEL
 
 # Bind-mount sources must exist, or Docker creates them as root
 mkdir -p "$job_dir/state"
+# Multi-tool jobs keep aider's home in state/aider
+if grep -qF './state/aider:' "${job_files[@]}"; then
+  mkdir -p "$job_dir/state/aider"
+fi
 # Claude Code jobs mount state/.claude (dir) and state/claude.json (file);
 # a missing file would otherwise become a root-owned directory
-if grep -qF './state/claude.json' "$job_dir/compose.yaml"; then
+if grep -qF './state/claude.json' "${job_files[@]}"; then
   mkdir -p "$job_dir/state/.claude"
   if [[ ! -e "$job_dir/state/claude.json" ]]; then
     (umask 077; printf '{}\n' > "$job_dir/state/claude.json")
   fi
 fi
 # Same for a CLAUDE.md mounted inside state/.claude
-if grep -qF ':/home/node/.claude/CLAUDE.md' "$job_dir/compose.yaml"; then
+if grep -qF ':/home/node/.claude/CLAUDE.md' "${job_files[@]}"; then
   [[ -e "$job_dir/state/.claude/CLAUDE.md" ]] || : > "$job_dir/state/.claude/CLAUDE.md"
 fi
 
-compose_files=(-f "$job_dir/compose.yaml")
 # agents/<job>/masks lists paths inside WORKSPACE_DIR to hide from the container
 if [[ -f "$job_dir/masks" ]]; then
   # Same precedence as compose: shell environment first, then .env
@@ -138,5 +197,5 @@ if [[ -f "$job_dir/masks" ]]; then
   [[ -s "$override" ]] && compose_files+=(-f "$override")
 fi
 
-echo "job: $job  model: $MODEL" >&2
+echo "job: $job  tool: ${tool:-?}  model: $MODEL" >&2
 exec docker compose "${compose_files[@]}" run --rm "$job" ${extra[@]+"${extra[@]}"}
