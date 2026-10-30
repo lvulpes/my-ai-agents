@@ -43,6 +43,30 @@ dotenv_get() {
   printf '%s' "$value"
 }
 
+# Print a compose override for service $1 that hides every path matching the
+# globs in file $2, relative to host folder $3 (which the job mounts at /work).
+# Prints nothing when no path matches.
+masks_override() {
+  local service="$1" file="$2" base="$3" pattern path entries=""
+  while IFS= read -r pattern || [[ -n "$pattern" ]]; do
+    [[ -z "$pattern" || "$pattern" == \#* ]] && continue
+    while IFS= read -r -d '' path; do
+      path="${path#"$base"/}"
+      if [[ -L "$base/$path" ]]; then
+        echo "error: mask '$path' is a symlink, refusing to mount over it" >&2
+        return 1
+      elif [[ -d "$base/$path" ]]; then
+        entries+="      - type: tmpfs"$'\n'
+      else
+        entries+="      - type: bind"$'\n'"        source: /dev/null"$'\n'"        read_only: true"$'\n'
+      fi
+      entries+="        target: '/work/${path//\'/\'\'}'"$'\n'
+    done < <(shopt -s nullglob; for path in "$base"/$pattern; do printf '%s\0' "$path"; done)
+  done < "$file"
+  [[ -n "$entries" ]] || return 0
+  printf 'services:\n  %s:\n    volumes:\n%s' "$service" "$entries"
+}
+
 if [[ $# -eq 0 ]]; then
   usage >&2
   exit 1
@@ -94,6 +118,25 @@ if grep -qF './state/claude.json' "$job_dir/compose.yaml"; then
     (umask 077; printf '{}\n' > "$job_dir/state/claude.json")
   fi
 fi
+# Same for a CLAUDE.md mounted inside state/.claude
+if grep -qF ':/home/node/.claude/CLAUDE.md' "$job_dir/compose.yaml"; then
+  [[ -e "$job_dir/state/.claude/CLAUDE.md" ]] || : > "$job_dir/state/.claude/CLAUDE.md"
+fi
+
+compose_files=(-f "$job_dir/compose.yaml")
+# agents/<job>/masks lists paths inside WORKSPACE_DIR to hide from the container
+if [[ -f "$job_dir/masks" ]]; then
+  # Same precedence as compose: shell environment first, then .env
+  workspace="${WORKSPACE_DIR:-$(dotenv_get "$job_dir/.env" WORKSPACE_DIR)}"
+  [[ -n "$workspace" ]] || { echo "error: set WORKSPACE_DIR in agents/$job/.env" >&2; exit 1; }
+  # Relative paths resolve against the job folder, as in compose
+  [[ "$workspace" == /* ]] || workspace="$job_dir/$workspace"
+  [[ -d "$workspace" ]] || { echo "error: WORKSPACE_DIR '$workspace' is not a folder" >&2; exit 1; }
+  workspace="$(cd "$workspace" && pwd -P)"
+  override="$job_dir/state/masks.compose.yaml"
+  masks_override "$job" "$job_dir/masks" "$workspace" > "$override"
+  [[ -s "$override" ]] && compose_files+=(-f "$override")
+fi
 
 echo "job: $job  model: $MODEL" >&2
-exec docker compose -f "$job_dir/compose.yaml" run --rm "$job" ${extra[@]+"${extra[@]}"}
+exec docker compose "${compose_files[@]}" run --rm "$job" ${extra[@]+"${extra[@]}"}

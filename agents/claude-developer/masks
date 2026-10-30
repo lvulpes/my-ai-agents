@@ -1,0 +1,12 @@
+# Paths hidden from this job, as globs relative to WORKSPACE_DIR (see run.sh).
+# Files become an empty read-only file, folders an empty tmpfs.
+
+# Secrets and tool logins
+agents/*/.env
+agents/*/state
+agents/*/state-legacy
+agents/*/.android
+
+# Other jobs' data. Evidence must never be writable
+agents/*/cases
+agents/*/evidence
