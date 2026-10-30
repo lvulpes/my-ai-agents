@@ -10,7 +10,7 @@ Auth: set `ANTHROPIC_API_KEY` in the job's `.env`, or leave it unset and log in 
 your subscription. The login is stored in the job's `state/.claude/`.
 Model: the job's compose passes `ANTHROPIC_MODEL=${MODEL}`.
 
-Jobs that need extra tooling (e.g. `agents/rea-mobile`) have their own Dockerfile that starts
+Jobs that need extra tooling (e.g. `agents/reverse-engineering`) have their own Dockerfile that starts
 with `FROM base`. Compose maps `base` to this image via `additional_contexts: base: service:claude-code-base`.
 
 Build it alone:

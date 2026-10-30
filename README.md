@@ -14,7 +14,7 @@ run.sh                              launcher
 | `recipe` | **aider** (architect) or claude-code | aider: `gemini/gemini-3.8-flash`, edits by `groq/openai/gpt-oss-120b`; claude-code: `sonnet` | `workspace/` | instructions (`GEMINI.md`, `.gemini/system.md`) |
 | `code-architect` | **aider** (architect) or claude-code | aider: `gemini/gemini-3.1-pro-preview`, edits by `groq/openai/gpt-oss-120b`; claude-code: `opus` | `$WORKSPACE_DIR` | |
 | `network-forensics` | aider + tshark | `groq/openai/gpt-oss-120b` | `cases/` | `evidence/` (pcaps) |
-| `rea-mobile` | claude-code + adb/REA | `opus` | `cases/` | `evidence/` (phone images), USB device |
+| `reverse-engineering` | claude-code + REA/Ghidra, binwalk/unblob, binutils | `opus` | `cases/` | `evidence/` (firmware, binaries, CTF files) |
 | `claude-developer` | claude-code + python/shellcheck | `opus` | `$WORKSPACE_DIR`, normally this repo (minus `masks`) | `CLAUDE.md` |
 
 **Tools.** A job with several tools has a shared `compose.yaml` plus one `compose.<tool>.yaml` per tool
@@ -38,7 +38,7 @@ cp agents/<job>/.env.example agents/<job>/.env   # then fill in the keys
 ./run.sh code-architect --tool claude-code
 ./run.sh code-architect --tool claude-code --model sonnet
 ./run.sh network-forensics --model gemini/gemini-3.8-flash
-./run.sh rea-mobile -- --resume
+./run.sh reverse-engineering -- --resume
 ./run.sh --help
 ```
 

@@ -16,5 +16,5 @@ skills/
     (supporting files)
 ```
 
-There are no shared skills yet. REA's own skills live in `agents/rea-mobile/rea/.agents/skills/`,
+There are no shared skills yet. REA's own skills live in `agents/reverse-engineering/rea/.agents/skills/`,
 and the account-synced Claude skills live in each job's `state/.claude/skills/`. Neither is managed here.
