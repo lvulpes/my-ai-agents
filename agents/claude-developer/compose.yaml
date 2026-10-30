@@ -1,0 +1,16 @@
+# agents/claude-developer/compose.yaml
+services:
+  claude-developer:
+    build:
+      context: ../../images/claude-code
+    image: claude-code:local
+    stdin_open: true
+    tty: true
+    working_dir: /work
+    environment:
+      - MODEL=${MODEL}
+    volumes:
+      - ${REPO_PATH:-./workspace}:/work
+      - ./state/.claude:/home/node/.claude
+      - ./state/claude.json:/home/node/.claude.json
+
