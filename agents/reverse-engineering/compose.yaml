@@ -1,4 +1,4 @@
-name: rea-mobile
+name: reverse-engineering
 
 services:
   # Build-only: provides `FROM base` for the job image
@@ -7,12 +7,12 @@ services:
     image: my-ai-agents/claude-code:local
     scale: 0
 
-  rea-mobile:
+  reverse-engineering:
     build:
       context: .
       additional_contexts:
         base: service:claude-code-base
-    image: my-ai-agents/rea-mobile:local
+    image: my-ai-agents/reverse-engineering:local
     user: "1000:1000"
     working_dir: /work
     stdin_open: true
@@ -29,15 +29,10 @@ services:
       - label:disable
     cap_drop:
       - ALL
-    devices:
-      - /dev/bus/usb:/dev/bus/usb
     volumes:
       - ./cases:/work/cases
       - ./evidence:/work/evidence:ro
       - ./state/.claude:/home/node/.claude
       - ./state/claude.json:/home/node/.claude.json
-      - ${ANDROID_KEYS_DIR:-${HOME}/.android}:/home/node/.android
       - ./CLAUDE.md:/work/CLAUDE.md:ro
       - ../../skills:/work/.claude/skills:ro
-    group_add:
-      - "1001"

@@ -220,7 +220,7 @@ __marimo__/
 .streamlit/secrets.toml
 
 # rea inside this repo
-agents/rea-mobile/rea
+agents/reverse-engineering/rea
 
 # recipes
 agents/recipe/workspace/recipes
