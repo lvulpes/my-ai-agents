@@ -1,0 +1,24 @@
+services:
+  # Build-only: provides `FROM base` for the job image
+  goose-base:
+    build: ../../images/goose
+    image: my-ai-agents/goose:local
+    scale: 0
+
+  network-forensics:
+    build:
+      context: .
+      additional_contexts:
+        base: service:goose-base
+    image: my-ai-agents/network-forensics-goose:local
+    # Image entrypoint is `goose`; default to an interactive session.
+    # Override per run, e.g. ./run.sh network-forensics -- run -t "..."
+    command: ["session"]
+    environment:
+      GOOSE_PROVIDER: ${GOOSE_PROVIDER:-groq}
+      GOOSE_MODEL: ${MODEL:?set MODEL_GOOSE in .env or pass --model}
+      GROQ_API_KEY: ${GROQ_API_KEY:-}
+    volumes:
+      - ./state/goose:/home/agent
+      - ./.goosehints:/work/cases/.goosehints:ro
+      - ../../skills:/skills:ro

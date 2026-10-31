@@ -1,26 +1,13 @@
+# Shared by every tool. The tool-specific parts (image/build, entrypoint, state,
+# model) are in compose.<tool>.yaml; run.sh adds the one picked by TOOL= or --tool.
 name: network-forensics
 
 services:
-  # Build-only: provides `FROM base` for the job image
-  aider-base:
-    build: ../../images/aider
-    image: my-ai-agents/aider:local
-    scale: 0
-
   network-forensics:
-    build:
-      context: .
-      additional_contexts:
-        base: service:aider-base
-    image: my-ai-agents/network-forensics:local
-    entrypoint: ["aider", "--config", "/config/.aider.conf.yml"]
     user: "1000:1000"
     working_dir: /work/cases
     stdin_open: true
     tty: true
-    environment:
-      AIDER_MODEL: ${MODEL:?set MODEL in .env or pass --model}
-      GROQ_API_KEY: ${GROQ_API_KEY:-}
     security_opt:
       - no-new-privileges:true
       # No :z relabel, so evidence file metadata is never modified
@@ -30,6 +17,3 @@ services:
     volumes:
       - ./cases:/work/cases
       - ./evidence:/work/evidence:ro
-      - ./state:/home/agent
-      - ./.aider.conf.yml:/config/.aider.conf.yml:ro
-      - ../../skills:/skills:ro

@@ -3,7 +3,7 @@
 AI agents in Docker. There's one image per **tool** and one folder per **job**. Some jobs can run with either tool.
 
 ```
-images/   claude-code/, aider/      one generic image per tool
+images/   claude-code/, aider/, goose/   one generic image per tool
 agents/   <job>/                    compose.yaml (+ compose.<tool>.yaml), tool config, .env, the job's own data
 skills/                             shared skills, mounted read-only into every job
 run.sh                              launcher
@@ -13,7 +13,7 @@ run.sh                              launcher
 |---|---|---|---|---|
 | `recipe` | **aider** (architect) or claude-code | aider: `gemini/gemini-3.8-flash`, edits by `groq/openai/gpt-oss-120b`; claude-code: `sonnet` | `workspace/` | instructions (`GEMINI.md`, `.gemini/system.md`) |
 | `code-architect` | **aider** (architect) or claude-code | aider: `gemini/gemini-3.1-pro-preview`, edits by `groq/openai/gpt-oss-120b`; claude-code: `opus` | `$WORKSPACE_DIR` | |
-| `network-forensics` | aider + tshark | `groq/openai/gpt-oss-120b` | `cases/` | `evidence/` (pcaps) |
+| `network-forensics` | **goose** or aider, + tshark | goose: `openai/gpt-oss-120b`; aider: `groq/openai/gpt-oss-120b` | `cases/` | `evidence/` (pcaps), `.goosehints` (goose brief) |
 | `reverse-engineering` | claude-code + REA/Ghidra, binwalk/unblob, binutils | `opus` | `cases/` | `evidence/` (firmware, binaries, CTF files) |
 | `claude-developer` | claude-code + python/shellcheck | `opus` | `$WORKSPACE_DIR`, normally this repo (minus `masks`) | `CLAUDE.md` |
 
@@ -22,11 +22,13 @@ run.sh                              launcher
 Single-tool jobs have only `compose.yaml`.
 - aider: a pair programmer. Works with any provider (Groq, Gemini, Anthropic API key, ...), but not your Claude subscription.
 - claude-code: an autonomous agent (runs commands, MCP, skills). Claude models only.
+- goose: an autonomous agent (plans and runs multi-step work, MCP extensions, approval modes for human-in-the-loop verification). Any provider/model, so it can drive open-weight models (Groq, Ollama, OpenRouter, ...).
 
-**Models.** Model names differ per tool, so a multi-tool job's `.env` sets one per tool: `MODEL_AIDER=`, `MODEL_CLAUDE_CODE=`.
+**Models.** Model names differ per tool, so a multi-tool job's `.env` sets one per tool: `MODEL_AIDER=`, `MODEL_CLAUDE_CODE=`, `MODEL_GOOSE=`.
 Single-tool jobs use `MODEL=`. `--model` overrides it for one run.
 - aider: Groq (`GROQ_API_KEY`) does the edits. In architect mode, Gemini (`GEMINI_*` key) does the reasoning.
 - claude-code: uses `ANTHROPIC_API_KEY`, or your subscription login when the key is unset. Each job has its own login.
+- goose: provider and model are separate — set `GOOSE_PROVIDER=` (e.g. `groq`) in `.env`, the model with `MODEL_GOOSE=`/`MODEL=`/`--model`, and the provider key (`GROQ_API_KEY`, ...) in `.env`.
 
 ## Usage
 
@@ -37,7 +39,9 @@ cp agents/<job>/.env.example agents/<job>/.env   # then fill in the keys
 ./run.sh recipe
 ./run.sh code-architect --tool claude-code
 ./run.sh code-architect --tool claude-code --model sonnet
-./run.sh network-forensics --model gemini/gemini-3.8-flash
+./run.sh network-forensics                       # goose (default)
+./run.sh network-forensics --tool aider
+./run.sh network-forensics -- run -t "Top talkers in evidence/*.pcap"
 ./run.sh reverse-engineering -- --resume
 ./run.sh --help
 ```
