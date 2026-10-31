@@ -1,7 +1,16 @@
 services:
-  code-architect:
+  # Build-only: provides `FROM base` for the job image
+  aider-base:
     build: ../../images/aider
     image: my-ai-agents/aider:local
+    scale: 0
+
+  code-architect:
+    build:
+      context: .
+      additional_contexts:
+        base: service:aider-base
+    image: my-ai-agents/code-architect-aider:local
     entrypoint: ["aider", "--config", "/config/.aider.conf.yml"]
     environment:
       AIDER_MODEL: ${MODEL:?set MODEL_AIDER in .env or pass --model}
@@ -10,4 +19,5 @@ services:
     volumes:
       - ./state/aider:/home/agent:z
       - ./.aider.conf.yml:/config/.aider.conf.yml:ro,z
+      - ./CLAUDE.md:/config/CLAUDE.md:ro,z
       - ../../skills:/skills:ro,z
