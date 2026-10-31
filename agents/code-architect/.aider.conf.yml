@@ -6,6 +6,10 @@ architect: true
 editor-model: groq/openai/gpt-oss-120b
 weak-model: groq/openai/gpt-oss-120b
 
+# Job instructions (git rules, tools), shared with Claude Code
+read:
+  - /config/CLAUDE.md
+
 # You review and commit yourself; don't touch the target repo's .gitignore
 auto-commits: false
 gitignore: false

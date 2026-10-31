@@ -1,7 +1,16 @@
 services:
-  code-architect:
+  # Build-only: provides `FROM base` for the job image
+  claude-code-base:
     build: ../../images/claude-code
     image: my-ai-agents/claude-code:local
+    scale: 0
+
+  code-architect:
+    build:
+      context: .
+      additional_contexts:
+        base: service:claude-code-base
+    image: my-ai-agents/code-architect-claude-code:local
     # Shared skills are loaded from /opt/shared/.claude/skills, outside the target repo
     entrypoint: ["claude", "--add-dir", "/opt/shared"]
     environment:
@@ -12,4 +21,6 @@ services:
     volumes:
       - ./state/.claude:/home/node/.claude:z
       - ./state/claude.json:/home/node/.claude.json:z
+      # Job instructions (git rules, tools), outside the target repo
+      - ./CLAUDE.md:/home/node/.claude/CLAUDE.md:ro,z
       - ../../skills:/opt/shared/.claude/skills:ro,z

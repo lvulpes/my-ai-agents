@@ -12,7 +12,7 @@ run.sh                              launcher
 | Job | Tools | Default model | Data (rw) | Read-only |
 |---|---|---|---|---|
 | `recipe` | **aider** (architect) or claude-code | aider: `gemini/gemini-3.8-flash`, edits by `groq/openai/gpt-oss-120b`; claude-code: `sonnet` | `workspace/` | instructions (`GEMINI.md`, `.gemini/system.md`) |
-| `code-architect` | **aider** (architect) or claude-code | aider: `gemini/gemini-3.1-pro-preview`, edits by `groq/openai/gpt-oss-120b`; claude-code: `opus` | `$WORKSPACE_DIR` | |
+| `code-architect` | **aider** (architect) or claude-code, + python/uv, shellcheck/yamllint, helm, jq/curl | aider: `gemini/gemini-3.1-pro-preview`, edits by `groq/openai/gpt-oss-120b`; claude-code: `opus` | `$WORKSPACE_DIR` | `CLAUDE.md` (git rules: you commit and push) |
 | `network-forensics` | **goose** or aider, + tshark | goose: `openai/gpt-oss-120b`; aider: `groq/openai/gpt-oss-120b` | `cases/` | `evidence/` (pcaps), `.goosehints` (goose brief) |
 | `reverse-engineering` | claude-code + REA/Ghidra, binwalk/unblob, binutils | `opus` | `cases/` | `evidence/` (firmware, binaries, CTF files) |
 | `claude-developer` | claude-code + python/shellcheck | `opus` | `$WORKSPACE_DIR`, normally this repo (minus `masks`) | `CLAUDE.md` |
