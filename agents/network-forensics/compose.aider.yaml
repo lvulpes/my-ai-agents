@@ -1,0 +1,21 @@
+services:
+  # Build-only: provides `FROM base` for the job image
+  aider-base:
+    build: ../../images/aider
+    image: my-ai-agents/aider:local
+    scale: 0
+
+  network-forensics:
+    build:
+      context: .
+      additional_contexts:
+        base: service:aider-base
+    image: my-ai-agents/network-forensics-aider:local
+    entrypoint: ["aider", "--config", "/config/.aider.conf.yml"]
+    environment:
+      AIDER_MODEL: ${MODEL:?set MODEL_AIDER in .env or pass --model}
+      GROQ_API_KEY: ${GROQ_API_KEY:-}
+    volumes:
+      - ./state/aider:/home/agent
+      - ./.aider.conf.yml:/config/.aider.conf.yml:ro
+      - ../../skills:/skills:ro

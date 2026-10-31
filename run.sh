@@ -170,6 +170,10 @@ mkdir -p "$job_dir/state"
 if grep -qF './state/aider:' "${job_files[@]}"; then
   mkdir -p "$job_dir/state/aider"
 fi
+# Goose keeps its config and sessions in state/goose (state/ in single-tool jobs)
+if grep -qF './state/goose:' "${job_files[@]}"; then
+  mkdir -p "$job_dir/state/goose"
+fi
 # Claude Code jobs mount state/.claude (dir) and state/claude.json (file);
 # a missing file would otherwise become a root-owned directory
 if grep -qF './state/claude.json' "${job_files[@]}"; then
