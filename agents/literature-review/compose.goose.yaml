@@ -1,0 +1,26 @@
+services:
+  # Build-only: provides `FROM base` for the job image
+  goose-base:
+    build: ../../images/goose
+    image: my-ai-agents/goose:local
+    scale: 0
+
+  literature-review:
+    build:
+      context: .
+      additional_contexts:
+        base: service:goose-base
+    image: my-ai-agents/literature-review-goose:local
+    # Image entrypoint is `goose`; default to an interactive session.
+    # Override per run, e.g. ./run.sh literature-review -- run -t "..."
+    command: ["session"]
+    environment:
+      GOOSE_PROVIDER: ${GOOSE_PROVIDER:-openrouter}
+      # With OpenRouter this is a `vendor/model` slug from openrouter.ai/models
+      GOOSE_MODEL: ${MODEL:?set MODEL_GOOSE in .env or pass --model}
+      OPENROUTER_API_KEY: ${OPENROUTER_API_KEY:-}
+    volumes:
+      - ./state/goose:/home/agent:z
+      # Goose reads .goosehints from its working dir (/work, not a host folder)
+      - ./INSTRUCTIONS.md:/work/.goosehints:ro,z
+      - ../../skills:/skills:ro,z

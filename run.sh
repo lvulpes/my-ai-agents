@@ -38,7 +38,7 @@ Options:
   --model <name>   Model for this run only (default: MODEL_<TOOL>= in
                    agents/<job>/.env, e.g. MODEL_CLAUDE_CODE=, then MODEL=).
                    Passed straight to the tool, not validated.
-  -- <args>        Everything after -- goes to the tool (aider / claude).
+  -- <args>        Everything after -- goes to the tool (aider / claude / goose).
   -h, --help       Show this help.
 
 Jobs:

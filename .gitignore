@@ -247,6 +247,11 @@ agents/*/cases/*
 !agents/*/cases/.gitkeep
 agents/*/evidence/*
 !agents/*/evidence/.gitkeep
+# literature-review: papers (often copyrighted) and the summaries written from them
+agents/*/papers/*
+!agents/*/papers/.gitkeep
+agents/literature-review/workspace/*
+!agents/literature-review/workspace/.gitkeep
 # aider runtime files (keep .aider.conf.yml)
 .aider.chat.history.md
 .aider.input.history
