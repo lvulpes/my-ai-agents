@@ -1,0 +1,19 @@
+# Shared by every tool. The tool-specific parts (image/build, entrypoint, state,
+# model) are in compose.<tool>.yaml; run.sh adds the one picked by TOOL= or --tool.
+name: literature-review
+
+services:
+  literature-review:
+    user: "1000:1000"
+    # /work itself is not persisted: only papers/ and workspace/ come from the host
+    working_dir: /work
+    stdin_open: true
+    tty: true
+    security_opt:
+      - no-new-privileges:true
+    cap_drop:
+      - ALL
+    volumes:
+      # The PDFs are never modified; anything the agent makes goes to workspace/
+      - ./papers:/work/papers:ro,z
+      - ./workspace:/work/workspace:z

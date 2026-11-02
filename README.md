@@ -14,6 +14,7 @@ run.sh                              launcher
 | `recipe` | **aider** (architect) or claude-code | aider: `gemini/gemini-3.8-flash`, edits by `groq/openai/gpt-oss-120b`; claude-code: `sonnet` | `workspace/` | instructions (`GEMINI.md`, `.gemini/system.md`) |
 | `code-architect` | **aider** (architect) or claude-code, + python/uv, shellcheck/yamllint, helm, jq/curl | aider: `gemini/gemini-3.1-pro-preview`, edits by `groq/openai/gpt-oss-120b`; claude-code: `opus` | `$WORKSPACE_DIR` | `CLAUDE.md` (git rules: you commit and push) |
 | `network-forensics` | **goose** or aider, + tshark | goose: `openai/gpt-oss-120b`; aider: `groq/openai/gpt-oss-120b` | `cases/` | `evidence/` (pcaps), `.goosehints` (goose brief) |
+| `literature-review` | **goose** or claude-code, + poppler-utils (pdfinfo/pdftotext), qpdf, exiftool | goose: `openai/gpt-oss-120b` via OpenRouter; claude-code: `sonnet` | `workspace/` (summaries) | `papers/` (PDFs), `INSTRUCTIONS.md` (brief for both tools) |
 | `reverse-engineering` | claude-code + REA/Ghidra, binwalk/unblob, binutils | `opus` | `cases/` | `evidence/` (firmware, binaries, CTF files) |
 | `claude-developer` | claude-code + python/shellcheck | `opus` | `$WORKSPACE_DIR`, normally this repo (minus `masks`) | `CLAUDE.md` |
 
@@ -29,6 +30,8 @@ Single-tool jobs use `MODEL=`. `--model` overrides it for one run.
 - aider: Groq (`GROQ_API_KEY`) does the edits. In architect mode, Gemini (`GEMINI_*` key) does the reasoning.
 - claude-code: uses `ANTHROPIC_API_KEY`, or your subscription login when the key is unset. Each job has its own login.
 - goose: provider and model are separate — set `GOOSE_PROVIDER=` (e.g. `groq`) in `.env`, the model with `MODEL_GOOSE=`/`MODEL=`/`--model`, and the provider key (`GROQ_API_KEY`, ...) in `.env`.
+  With `GOOSE_PROVIDER=openrouter` (`OPENROUTER_API_KEY`), one key reaches many vendors and `--model` takes any OpenRouter slug
+  (`vendor/model`, see openrouter.ai/models). The model must support tool calling, or goose can't run commands.
 
 ## Usage
 
@@ -42,6 +45,9 @@ cp agents/<job>/.env.example agents/<job>/.env   # then fill in the keys
 ./run.sh network-forensics                       # goose (default)
 ./run.sh network-forensics --tool aider
 ./run.sh network-forensics -- run -t "Top talkers in evidence/*.pcap"
+./run.sh literature-review                       # goose via OpenRouter (default)
+./run.sh literature-review --model google/gemini-2.5-pro
+./run.sh literature-review --tool claude-code
 ./run.sh reverse-engineering -- --resume
 ./run.sh --help
 ```
