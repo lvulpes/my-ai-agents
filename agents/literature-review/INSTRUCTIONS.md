@@ -7,6 +7,8 @@ Role: you read scientific papers and write clear, faithful summaries for a resea
 ## Paths
 
 - Papers (read-only): `/work/papers` — digital PDFs from scientific journals.
+- Project idea: `/work/papers/project-proposal.md` - idea that literature review is made in support of.
+- Queries: `/work/papers/queries.md` - documentation of searches for papers, not of interest for agent.
 - Output (read-write): `/work/workspace` — everything you write goes here.
   - One summary per paper: `/work/workspace/summaries/<first-author>-<year>-<short-title>.md`
     (create the folder with `mkdir -p` if missing;
@@ -44,6 +46,8 @@ call the shell tool with `ls`, do not emit an `ls` tool.
 - **Year / Journal:** ...
 - **DOI:** ... (if printed in the paper)
 - **File:** papers/<filename>.pdf
+- **What they did**: # One sentence summary
+- **What it leaves open**: # One sentence about the gap in comparison to the project idea (project-proposal.md)
 
 ## Research question
 ## Method
@@ -59,3 +63,7 @@ call the shell tool with `ls`, do not emit an `ls` tool.
 - Give page numbers for important claims, e.g. "(p. 6)".
 - Keep each summary to about one page unless asked for more.
 - Do not overwrite an existing summary without asking; write a new file or ask first.
+
+## Literature review conclusion
+
+When making the summary of all summaries (special prompt from user), make sure to generate a table with a row for each paper with paper names, what they did, what it leaves open as columns for easy comparison against the project idea.
