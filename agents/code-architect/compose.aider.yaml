@@ -14,6 +14,11 @@ services:
     entrypoint: ["aider", "--config", "/config/.aider.conf.yml"]
     environment:
       AIDER_MODEL: ${MODEL:?set MODEL_AIDER in .env or pass --model}
+      # Architect mode editor; also used as the weak model (commit messages, chat summaries)
+      AIDER_EDITOR_MODEL: ${EDITOR_MODEL_AIDER:-groq/openai/gpt-oss-120b}
+      AIDER_WEAK_MODEL: ${EDITOR_MODEL_AIDER:-groq/openai/gpt-oss-120b}
+      # Only the keys of the providers in the model names above are needed
+      OPENROUTER_API_KEY: ${OPENROUTER_API_KEY:-}
       GROQ_API_KEY: ${GROQ_API_KEY:-}
       GEMINI_API_KEY: ${GEMINI_ACADEMIC_CODE_KEY:-}
     volumes:

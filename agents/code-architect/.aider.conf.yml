@@ -1,14 +1,15 @@
 # Coding job on an external repo (WORKSPACE_DIR in .env).
-# Architect mode: Gemini plans, Groq writes the edits.
-# MODEL_AIDER in .env (or ./run.sh code-architect --model ...) overrides `model` via AIDER_MODEL.
-model: gemini/gemini-3.1-pro-preview
+# Architect mode: a strong model plans, a cheap fast one writes the edits.
+# Both come from .env via compose.aider.yaml:
+#   MODEL_AIDER (or --model)  -> AIDER_MODEL         the planner
+#   EDITOR_MODEL_AIDER        -> AIDER_EDITOR_MODEL  the editor (also the weak model for commit msgs/summaries)
+# Any provider works: gemini/..., groq/..., or openrouter/<vendor>/<model> with one OPENROUTER_API_KEY.
 architect: true
-editor-model: groq/openai/gpt-oss-120b
-weak-model: groq/openai/gpt-oss-120b
 
 # Job instructions (git rules, tools), shared with Claude Code
 read:
   - /config/CLAUDE.md
+  - /work/AGENTS.md
 
 # You review and commit yourself; don't touch the target repo's .gitignore
 auto-commits: false
