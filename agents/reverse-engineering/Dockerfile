@@ -13,6 +13,13 @@ FROM rust:1-bookworm AS binwalk
 RUN apt-get update && apt-get install -y --no-install-recommends libfontconfig1-dev liblzma-dev libbz2-dev \
  && cargo install binwalk --version 3.1.0 --locked --root /opt/binwalk
 
+# REA is a Node project. The claude-code base already has Node, the goose base
+# doesn't: copy Node from its official image into /opt/node (same major version as
+# the claude-code base, which REA's .nvmrc also uses).
+FROM node:24-bookworm-slim AS node
+
+# Works on either tool base (claude-code: Node, user `node`; goose: plain Debian,
+# user `agent`). Both are Debian with uid 1000, so this file only uses `USER 1000`.
 FROM base
 
 USER root
@@ -25,15 +32,21 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
       bzip2 xz-utils lz4 lzop zstd lziprecover \
       device-tree-compiler u-boot-tools \
       libfontconfig1 liblzma5 libbz2-1.0 \
+      procps \
  && rm -rf /var/lib/apt/lists/*
 
 # Ghidra 12.1 needs JDK 21+, bookworm only has 17: take Temurin 21 from its official image
 COPY --from=eclipse-temurin:21-jdk /opt/java/openjdk /opt/java/openjdk
 COPY --from=ghidra /opt/ghidra /opt/ghidra
 COPY --from=binwalk /opt/binwalk/bin/binwalk /usr/local/bin/binwalk
+COPY --from=node /usr/local/bin/node /opt/node/bin/node
+COPY --from=node /usr/local/lib/node_modules/npm /opt/node/lib/node_modules/npm
+RUN ln -s ../lib/node_modules/npm/bin/npm-cli.js /opt/node/bin/npm \
+ && ln -s ../lib/node_modules/npm/bin/npx-cli.js /opt/node/bin/npx
 ENV JAVA_HOME=/opt/java/openjdk \
     GHIDRA_INSTALL_DIR=/opt/ghidra
-ENV PATH=/opt/re-tools/bin:$JAVA_HOME/bin:$PATH
+# /opt/node comes last, so the claude-code base keeps using its own Node
+ENV PATH=/opt/re-tools/bin:$JAVA_HOME/bin:$PATH:/opt/node/bin
 
 # Python tools in their own venv: unblob 26.6 (what REA accepts) and libraries for scripting
 RUN python3 -m venv /opt/re-tools \
@@ -42,11 +55,11 @@ RUN python3 -m venv /opt/re-tools \
 ENV REA_BINWALK_COMMAND=/usr/local/bin/binwalk \
     REA_UNBLOB_COMMAND=/opt/re-tools/bin/unblob
 
-USER node
-COPY --chown=node:node rea /opt/rea
+USER 1000
+COPY --chown=1000:1000 rea /opt/rea
 RUN cd /opt/rea && npm ci && npm run build
 USER root
 RUN ln -s /opt/rea/scripts/rea.mjs /usr/local/bin/rea
-USER node
+USER 1000
 
 WORKDIR /work

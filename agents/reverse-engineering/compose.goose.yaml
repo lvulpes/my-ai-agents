@@ -1,0 +1,30 @@
+services:
+  # Build-only: provides `FROM base` for the job image
+  goose-base:
+    build: ../../images/goose
+    image: my-ai-agents/goose:local
+    scale: 0
+
+  reverse-engineering:
+    build:
+      context: .
+      additional_contexts:
+        base: service:goose-base
+    image: my-ai-agents/reverse-engineering-goose:local
+    # Image entrypoint is `goose`; default to an interactive session with REA's
+    # MCP server loaded as an extension. Override per run, e.g.
+    # ./run.sh reverse-engineering -- run --with-extension "rea mcp" -t "..."
+    command: ["session", "--with-extension", "rea mcp"]
+    environment:
+      GOOSE_PROVIDER: ${GOOSE_PROVIDER:-openrouter}
+      # With OpenRouter this is a `vendor/model` slug from openrouter.ai/models
+      GOOSE_MODEL: ${MODEL:?set MODEL_GOOSE in .env or pass --model}
+      OPENROUTER_API_KEY: ${OPENROUTER_API_KEY:-}
+      GROQ_API_KEY: ${GROQ_API_KEY:-}
+      # Smaller REA tool descriptions: open-weight models have less context to spare
+      REA_MCP_OUTPUT_SCHEMA_PROFILE: compact
+    volumes:
+      - ./state/goose:/home/agent
+      # Goose reads .goosehints from its working dir (/work, not a host folder)
+      - ./INSTRUCTIONS.md:/work/.goosehints:ro
+      - ../../skills:/skills:ro
