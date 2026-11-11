@@ -20,15 +20,17 @@ We use Groq, Gemini and Anthropic models through either Claude Code or aider.
 
 ## Conventions
 
-- **Multi-tool jobs** (`code-architect`, `recipe`): `compose.yaml` holds only what both tools share (data mounts, security).
+- **Multi-tool jobs** (`code-architect`, `recipe`, `network-forensics`, `literature-review`, `reverse-engineering`): `compose.yaml` holds only what both tools share (data mounts, security).
   `compose.<tool>.yaml` adds image, entrypoint, state mounts, the model variable and skills. `run.sh` finds the tools by those files.
-  `.env` sets `TOOL=` and one model per tool: `MODEL_AIDER=`, `MODEL_CLAUDE_CODE=` (`MODEL=` is a fallback for the default tool).
-- **Single-tool jobs** (`network-forensics`, `reverse-engineering`, `claude-developer`): `compose.yaml` is complete and `.env` uses `MODEL=`.
+  `.env` sets `TOOL=` and one model per tool: `MODEL_AIDER=`, `MODEL_CLAUDE_CODE=`, `MODEL_GOOSE=` (`MODEL=` is a fallback for the default tool).
+- **Single-tool jobs** (`claude-developer`): `compose.yaml` is complete and `.env` uses `MODEL=`.
 - Jobs with extra tooling use a Dockerfile with `FROM base`, where compose maps `base` to the tool image (`additional_contexts`).
-  The images differ: aider has Python and user `agent` (home `/home/agent`); claude-code has Node and user `node` (home `/home/node`).
+  The images differ: aider has Python and user `agent` (home `/home/agent`); claude-code has Node and user `node` (home `/home/node`);
+  goose is plain Debian with user `agent` (home `/home/agent`). A Dockerfile shared by several bases uses `USER 1000`.
 - Model names differ per tool: aider takes `provider/model` (`gemini/...`, `groq/...`), Claude Code takes Claude models or aliases (`opus`, `sonnet`).
   Claude Code can't use non-Anthropic models, and aider can't use a Claude subscription (it needs `ANTHROPIC_API_KEY`).
-- State: aider uses `state/aider/` in multi-tool jobs (`state/` in single-tool ones), Claude Code uses `state/.claude/` + `state/claude.json`.
+  Goose takes the provider in `GOOSE_PROVIDER=` and the model separately (OpenRouter: `vendor/model`, e.g. `openai/gpt-oss-120b`).
+- State: aider uses `state/aider/` in multi-tool jobs (`state/` in single-tool ones), goose `state/goose/`, Claude Code uses `state/.claude/` + `state/claude.json`.
   `run.sh` pre-creates bind-mount sources so Docker doesn't create them as root.
 
 ## Security rules (keep them in every change)
