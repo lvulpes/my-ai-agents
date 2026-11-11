@@ -19,6 +19,8 @@ the provider key (`GROQ_API_KEY`, ...) from the job's `.env`. This lets a job ru
 open-weight models (Groq, Ollama, OpenRouter) without being tied to one provider.
 
 Jobs that need extra tooling have their own Dockerfile that starts with `FROM base`.
+There is no Node or Python in this image: a job that needs them installs them itself
+(`agents/reverse-engineering` copies Node from the official `node` image for REA).
 Compose maps `base` to this image via `additional_contexts: base: service:goose-base`.
 
 Build it alone:

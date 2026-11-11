@@ -1,0 +1,26 @@
+services:
+  # Build-only: provides `FROM base` for the job image
+  claude-code-base:
+    build: ../../images/claude-code
+    image: my-ai-agents/claude-code:local
+    scale: 0
+
+  reverse-engineering:
+    build:
+      context: .
+      additional_contexts:
+        base: service:claude-code-base
+    image: my-ai-agents/reverse-engineering-claude-code:local
+    # Shared skills are loaded from /opt/shared/.claude/skills, outside the workspace
+    entrypoint: ["claude", "--add-dir", "/opt/shared"]
+    environment:
+      HOME: /home/node
+      ANTHROPIC_MODEL: ${MODEL:?set MODEL_CLAUDE_CODE in .env or pass --model}
+      # Leave empty to use the subscription login stored in state/.claude
+      ANTHROPIC_API_KEY: ${ANTHROPIC_API_KEY:-}
+    volumes:
+      - ./state/.claude:/home/node/.claude
+      - ./state/claude.json:/home/node/.claude.json
+      # Same brief goose gets as .goosehints
+      - ./INSTRUCTIONS.md:/work/CLAUDE.md:ro
+      - ../../skills:/opt/shared/.claude/skills:ro

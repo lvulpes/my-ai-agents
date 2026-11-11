@@ -1,38 +1,19 @@
+# Shared by every tool. The tool-specific parts (image/build, entrypoint, state,
+# model) are in compose.<tool>.yaml; run.sh adds the one picked by TOOL= or --tool.
 name: reverse-engineering
 
 services:
-  # Build-only: provides `FROM base` for the job image
-  claude-code-base:
-    build: ../../images/claude-code
-    image: my-ai-agents/claude-code:local
-    scale: 0
-
   reverse-engineering:
-    build:
-      context: .
-      additional_contexts:
-        base: service:claude-code-base
-    image: my-ai-agents/reverse-engineering:local
     user: "1000:1000"
     working_dir: /work
     stdin_open: true
     tty: true
-    # ANTHROPIC_API_KEY comes from .env if set; otherwise the subscription login in state/ is used
-    env_file:
-      - path: .env
-        required: false
-    environment:
-      HOME: /home/node
-      ANTHROPIC_MODEL: ${MODEL:?set MODEL in .env or pass --model}
     security_opt:
       - no-new-privileges:true
+      # No :z relabel, so evidence file metadata is never modified
       - label:disable
     cap_drop:
       - ALL
     volumes:
       - ./cases:/work/cases
       - ./evidence:/work/evidence:ro
-      - ./state/.claude:/home/node/.claude
-      - ./state/claude.json:/home/node/.claude.json
-      - ./CLAUDE.md:/work/CLAUDE.md:ro
-      - ../../skills:/work/.claude/skills:ro
