@@ -1,0 +1,26 @@
+# Shared by every tool. The tool-specific parts (image/build, entrypoint, state,
+# model) are in compose.<tool>.yaml; run.sh adds the one picked by TOOL= or --tool.
+name: log-analysis
+
+services:
+  log-analysis:
+    user: "1000:1000"
+    working_dir: /work
+    stdin_open: true
+    tty: true
+    security_opt:
+      - no-new-privileges:true
+      # No :z relabel, so evidence file metadata is never modified
+      - label:disable
+    cap_drop:
+      - ALL
+    volumes:
+      - ./cases:/work/cases
+      # The logs: WORKSPACE_DIR from .env (any folder on the host), else ./evidence.
+      # Always read-only; a wrong path fails instead of creating an empty folder.
+      - type: bind
+        source: ${WORKSPACE_DIR:-./evidence}
+        target: /work/evidence
+        read_only: true
+        bind:
+          create_host_path: false
