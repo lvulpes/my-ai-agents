@@ -1,0 +1,29 @@
+services:
+  # Build-only: provides `FROM base` for the job image
+  goose-base:
+    build: ../../images/goose
+    image: my-ai-agents/goose:local
+    scale: 0
+
+  log-analysis:
+    build:
+      context: .
+      additional_contexts:
+        base: service:goose-base
+    image: my-ai-agents/log-analysis-goose:local
+    # Image entrypoint is `goose`; default to an interactive session.
+    # Override per run, e.g. ./run.sh log-analysis -- run -t "..."
+    command: ["session"]
+    environment:
+      GOOSE_PROVIDER: ${GOOSE_PROVIDER:-openrouter}
+      # With OpenRouter this is a `vendor/model` slug from openrouter.ai/models
+      GOOSE_MODEL: ${MODEL:?set MODEL_GOOSE in .env or pass --model}
+      OPENROUTER_API_KEY: ${OPENROUTER_API_KEY:-}
+      # Logs are untrusted input (prompt injection), so goose asks before risky
+      # commands by default. Set GOOSE_MODE=auto in .env for unattended runs.
+      GOOSE_MODE: ${GOOSE_MODE:-smart_approve}
+    volumes:
+      - ./state/goose:/home/agent
+      # Goose reads .goosehints from its working dir (/work, not a host folder)
+      - ./INSTRUCTIONS.md:/work/.goosehints:ro
+      - ../../skills:/skills:ro

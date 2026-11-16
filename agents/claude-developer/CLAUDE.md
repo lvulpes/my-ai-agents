@@ -20,7 +20,7 @@ We use Groq, Gemini and Anthropic models through either Claude Code or aider.
 
 ## Conventions
 
-- **Multi-tool jobs** (`code-architect`, `recipe`, `network-forensics`, `literature-review`, `reverse-engineering`): `compose.yaml` holds only what both tools share (data mounts, security).
+- **Multi-tool jobs** (`code-architect`, `recipe`, `network-forensics`, `literature-review`, `reverse-engineering`, `log-analysis`): `compose.yaml` holds only what both tools share (data mounts, security).
   `compose.<tool>.yaml` adds image, entrypoint, state mounts, the model variable and skills. `run.sh` finds the tools by those files.
   `.env` sets `TOOL=` and one model per tool: `MODEL_AIDER=`, `MODEL_CLAUDE_CODE=`, `MODEL_GOOSE=` (`MODEL=` is a fallback for the default tool).
 - **Single-tool jobs** (`claude-developer`): `compose.yaml` is complete and `.env` uses `MODEL=`.

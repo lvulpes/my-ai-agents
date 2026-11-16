@@ -16,6 +16,7 @@ run.sh                              launcher
 | `network-forensics` | **goose** or aider, + tshark | goose: `openai/gpt-oss-120b`; aider: `groq/openai/gpt-oss-120b` | `cases/` | `evidence/` (pcaps), `.goosehints` (goose brief) |
 | `literature-review` | **goose** or claude-code, + poppler-utils (pdfinfo/pdftotext), qpdf, exiftool | goose: `openai/gpt-oss-120b` via OpenRouter; claude-code: `sonnet` | `workspace/` (summaries) | `papers/` (PDFs), `INSTRUCTIONS.md` (brief for both tools) |
 | `reverse-engineering` | **goose** or claude-code, + REA/Ghidra, binwalk/unblob, binutils | goose: `openai/gpt-oss-120b` via OpenRouter; claude-code: `opus` | `cases/` | `evidence/` (firmware, binaries, CTF files), `INSTRUCTIONS.md` (brief for both tools) |
+| `log-analysis` | **goose** or claude-code, + jq, miller, ripgrep, sqlite3, python (duckdb, pandas, python-evtx) | goose: `openai/gpt-oss-120b` via OpenRouter; claude-code: `sonnet` | `cases/` | `$WORKSPACE_DIR` or `evidence/` (logs: traffic, host, agent frameworks), `INSTRUCTIONS.md` (brief for both tools) |
 | `claude-developer` | claude-code + python/shellcheck | `opus` | `$WORKSPACE_DIR`, normally this repo (minus `masks`) | `CLAUDE.md` |
 
 **Tools.** A job with several tools has a shared `compose.yaml` plus one `compose.<tool>.yaml` per tool
@@ -53,6 +54,9 @@ cp agents/<job>/.env.example agents/<job>/.env   # then fill in the keys
 ./run.sh literature-review --tool claude-code
 ./run.sh reverse-engineering                     # goose via OpenRouter, REA loaded as MCP extension
 ./run.sh reverse-engineering --tool claude-code -- --resume
+./run.sh log-analysis                            # goose via OpenRouter, asks before risky commands
+./run.sh log-analysis --model deepseek/deepseek-v4.1-flash
+./run.sh log-analysis --tool claude-code
 ./run.sh --help
 ```
 
