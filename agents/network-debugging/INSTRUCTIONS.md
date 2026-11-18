@@ -41,10 +41,6 @@ call the shell tool with `ls`, do not emit an `ls` tool.
   (e.g. "my LAN 192.168.1.0/24"). If a target is unclear, ask before sending anything.
 - Prefer the smallest test that answers the question: one `ping` or `nc -vz` before a scan,
   a few ports before `-p-`, one host before a whole subnet.
-- Keep scans polite: default timing or slower (`-T3` or lower), no `--min-rate` floods,
-  no `-T5`. Never run anything meant to overload a host (no flooding, `ping -f`, stress tests).
-- No exploitation: no brute force, no exploit or `intrusive`/`brute`/`dos` NSE scripts.
-  `default`, `safe` and `discovery` scripts are fine on approved targets.
 - Never change the network: no ARP spoofing, no forged packets, no attempts to reach the host's
   own services or the Docker daemon.
 
