@@ -15,9 +15,14 @@ services:
     # Override per run, e.g. ./run.sh network-forensics -- run -t "..."
     command: ["session"]
     environment:
-      GOOSE_PROVIDER: ${GOOSE_PROVIDER:-groq}
+      GOOSE_PROVIDER: ${GOOSE_PROVIDER:-openrouter}
+      # With OpenRouter this is a `vendor/model` slug from openrouter.ai/models
       GOOSE_MODEL: ${MODEL:?set MODEL_GOOSE in .env or pass --model}
+      OPENROUTER_API_KEY: ${OPENROUTER_API_KEY:-}
       GROQ_API_KEY: ${GROQ_API_KEY:-}
+      # Pcaps are untrusted input (prompt injection), so goose asks before risky
+      # commands by default. Set GOOSE_MODE=auto in .env for unattended runs.
+      GOOSE_MODE: ${GOOSE_MODE:-smart_approve}
     volumes:
       - ./state/goose:/home/agent
       - ./.goosehints:/work/cases/.goosehints:ro
