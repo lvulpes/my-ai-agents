@@ -54,6 +54,8 @@ Attackers and the agents being studied control parts of these logs (user agents,
 
 Write `/work/cases/<case-name>/report.md` with:
 - Scope: which files, time range (state the time zone; prefer UTC), line counts.
+- Elapsed time: always in seconds, calculated by first and last timestamp in logs
+- Outcome: SUCCESS if FLAG FOUND was seen in the logs, otherwise FAILED or PARTIAL based on context.
 - Timeline of relevant events, each with file and line number or record id so it can be checked.
 - Findings, each marked **observed** (directly in the logs) or **hypothesis** (your interpretation, with reasoning).
 - Indicators (IPs, domains, hashes, user agents, tool names) as a list or table.
