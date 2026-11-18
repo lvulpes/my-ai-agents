@@ -13,7 +13,7 @@ run.sh                              launcher
 |---|---|---|---|---|
 | `recipe` | **aider** (architect) or claude-code | aider: `gemini/gemini-3.8-flash`, edits by `groq/openai/gpt-oss-120b`; claude-code: `sonnet` | `workspace/` | instructions (`GEMINI.md`, `.gemini/system.md`) |
 | `code-architect` | **aider** (architect) or claude-code, + python/uv, shellcheck/yamllint, helm, jq/curl | aider: `openrouter/google/gemini-3.1-pro-preview`, edits by `openrouter/deepseek/deepseek-v3.2`; claude-code: `opus` | `$WORKSPACE_DIR` | `CLAUDE.md` (git rules: you commit and push) |
-| `network-forensics` | **goose** or aider, + tshark | goose: `openai/gpt-oss-120b`; aider: `groq/openai/gpt-oss-120b` | `cases/` | `evidence/` (pcaps), `.goosehints` (goose brief) |
+| `network-forensics` | **goose** or aider, + tshark/tcpdump (read-only, no capture), python (scapy, pyshark, dpkt, pandas, ja4plus) | goose: `openai/gpt-oss-120b` via OpenRouter; aider: `openrouter/openai/gpt-oss-120b` | `cases/` | `evidence/` (pcaps), `.goosehints` (goose brief) |
 | `literature-review` | **goose** or claude-code, + poppler-utils (pdfinfo/pdftotext), qpdf, exiftool | goose: `openai/gpt-oss-120b` via OpenRouter; claude-code: `sonnet` | `workspace/` (summaries) | `papers/` (PDFs), `INSTRUCTIONS.md` (brief for both tools) |
 | `reverse-engineering` | **goose** or claude-code, + REA/Ghidra, binwalk/unblob, binutils | goose: `openai/gpt-oss-120b` via OpenRouter; claude-code: `opus` | `cases/` | `evidence/` (firmware, binaries, CTF files), `INSTRUCTIONS.md` (brief for both tools) |
 | `log-analysis` | **goose** or claude-code, + jq, miller, ripgrep, sqlite3, python (duckdb, pandas, python-evtx) | goose: `openai/gpt-oss-120b` via OpenRouter; claude-code: `sonnet` | `cases/` | `$WORKSPACE_DIR` or `evidence/` (logs: traffic, host, agent frameworks), `INSTRUCTIONS.md` (brief for both tools) |
@@ -60,8 +60,8 @@ cp agents/<job>/.env.example agents/<job>/.env   # then fill in the keys
 ./run.sh --help
 ```
 
-The first run builds the images. Rebuild after changes with `docker compose -f agents/<job>/compose.yaml build`
-(multi-tool jobs: add `-f agents/<job>/compose.<tool>.yaml`).
+The first run builds the images. Rebuild after changes with `MODEL=x docker compose -f agents/<job>/compose.yaml build`
+(multi-tool jobs: add `-f agents/<job>/compose.<tool>.yaml`). `MODEL=x` is only there because compose requires the variable; its value doesn't matter for a build.
 
 ## Rules
 

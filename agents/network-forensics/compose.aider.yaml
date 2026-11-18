@@ -14,6 +14,8 @@ services:
     entrypoint: ["aider", "--config", "/config/.aider.conf.yml"]
     environment:
       AIDER_MODEL: ${MODEL:?set MODEL_AIDER in .env or pass --model}
+      # Only the key of the provider in the model name is needed
+      OPENROUTER_API_KEY: ${OPENROUTER_API_KEY:-}
       GROQ_API_KEY: ${GROQ_API_KEY:-}
     volumes:
       - ./state/aider:/home/agent
