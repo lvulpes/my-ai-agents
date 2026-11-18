@@ -17,6 +17,7 @@ run.sh                              launcher
 | `literature-review` | **goose** or claude-code, + poppler-utils (pdfinfo/pdftotext), qpdf, exiftool | goose: `openai/gpt-oss-120b` via OpenRouter; claude-code: `sonnet` | `workspace/` (summaries) | `papers/` (PDFs), `INSTRUCTIONS.md` (brief for both tools) |
 | `reverse-engineering` | **goose** or claude-code, + REA/Ghidra, binwalk/unblob, binutils | goose: `openai/gpt-oss-120b` via OpenRouter; claude-code: `opus` | `cases/` | `evidence/` (firmware, binaries, CTF files), `INSTRUCTIONS.md` (brief for both tools) |
 | `log-analysis` | **goose** or claude-code, + jq, miller, ripgrep, sqlite3, python (duckdb, pandas, python-evtx) | goose: `openai/gpt-oss-120b` via OpenRouter; claude-code: `sonnet` | `cases/` | `$WORKSPACE_DIR` or `evidence/` (logs: traffic, host, agent frameworks), `INSTRUCTIONS.md` (brief for both tools) |
+| `network-debugging` | **goose** or claude-code, + nmap, ping, traceroute/tracepath, arping, dig, nc, telnet (live traffic, NET_RAW for nmap/arping) | goose: `openai/gpt-oss-120b` via OpenRouter; claude-code: `sonnet` | `cases/` | `INSTRUCTIONS.md` (brief for both tools: scope and safety rules); optional `TARGET_NETWORK=` joins an existing Docker network (e.g. a lab) |
 | `claude-developer` | claude-code + python/shellcheck | `opus` | `$WORKSPACE_DIR`, normally this repo (minus `masks`) | `CLAUDE.md` |
 
 **Tools.** A job with several tools has a shared `compose.yaml` plus one `compose.<tool>.yaml` per tool
@@ -40,7 +41,7 @@ Single-tool jobs use `MODEL=`. `--model` overrides it for one run.
 
 ```bash
 cp agents/<job>/.env.example agents/<job>/.env   # then fill in the keys
-./run.sh <job> [--tool <tool>] [--model <name>] [-- <extra args>]
+./run.sh <job> [--tool <tool>] [--model <name>] [--build] [-- <extra args>]
 
 ./run.sh recipe
 ./run.sh code-architect --tool claude-code
@@ -48,6 +49,7 @@ cp agents/<job>/.env.example agents/<job>/.env   # then fill in the keys
 ./run.sh code-architect --model openrouter/moonshotai/kimi-k2.7-code
 ./run.sh network-forensics                       # goose (default)
 ./run.sh network-forensics --tool aider
+./run.sh network-forensics --build               # rebuild the image first (after Dockerfile changes)
 ./run.sh network-forensics -- run -t "Top talkers in evidence/*.pcap"
 ./run.sh literature-review                       # goose via OpenRouter (default)
 ./run.sh literature-review --model google/gemini-2.5-pro
@@ -57,11 +59,23 @@ cp agents/<job>/.env.example agents/<job>/.env   # then fill in the keys
 ./run.sh log-analysis                            # goose via OpenRouter, asks before risky commands
 ./run.sh log-analysis --model deepseek/deepseek-v4.1-flash
 ./run.sh log-analysis --tool claude-code
+./run.sh network-debugging                      # goose via OpenRouter, asks before scans and connections
+./run.sh network-debugging -- run -t "Why can't I reach 192.168.1.20 on port 22?"
 ./run.sh --help
 ```
 
-The first run builds the images. Rebuild after changes with `MODEL=x docker compose -f agents/<job>/compose.yaml build`
-(multi-tool jobs: add `-f agents/<job>/compose.<tool>.yaml`). `MODEL=x` is only there because compose requires the variable; its value doesn't matter for a build.
+Drop into an agents container:
+``` bash
+MODEL=x docker compose -f compose.yaml -f compose.goose.yaml run --rm --entrypoint bash network-debugging
+```
+
+The first run builds the images. After that, the existing image is reused even when a Dockerfile changed:
+add `--build` to rebuild the job image (and its tool base) before starting. Docker's cache keeps unchanged steps, so it's fast when nothing changed.
+
+**Reaching other containers (`network-debugging`).** Each job runs on its own Docker network, and Docker blocks traffic
+between networks. To debug containers on another network, set `TARGET_NETWORK=` in the job's `.env` to that network's
+**name** (NAME column of `docker network ls`, not a subnet, IP or container). `run.sh` then adds `target-network.yaml`,
+which attaches the job to that network as well. The network must exist first, so start those containers before the job.
 
 ## Rules
 
@@ -69,4 +83,6 @@ The first run builds the images. Rebuild after changes with `MODEL=x docker comp
   In multi-tool jobs aider uses `state/aider/` and Claude Code `state/.claude/` + `state/claude.json`.
 - Containers run as uid 1000 with `cap_drop: ALL` and `no-new-privileges`. They never get the Docker socket, `$HOME` or `/`.
 - Evidence is always mounted `:ro`.
+- One exception: `network-debugging` gets `NET_RAW` and runs without `no-new-privileges`, so that nmap and arping (and only those, via file capabilities) can use raw sockets.
+  Everything else in that image runs unprivileged and it has no setuid binaries. It sends real traffic, so its brief limits it to targets you name.
 - `claude-developer` manages this repo, so its `WORKSPACE_DIR` normally points here. `run.sh` hides the paths in `agents/claude-developer/masks` (every `.env`, `state/`, `cases/`, `evidence/`, ...) by mounting empty files and folders over them. A new job's secrets are covered automatically as long as they follow these folder names.

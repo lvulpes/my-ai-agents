@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# Launch a job: ./run.sh <job> [--tool <tool>] [--model <name>] [-- <extra args>]
+# Launch a job: ./run.sh <job> [--tool <tool>] [--model <name>] [--build] [-- <extra args>]
 set -euo pipefail
 
 ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
@@ -27,7 +27,7 @@ list_jobs() {
 
 usage() {
   cat <<EOF
-Usage: ./run.sh <job> [--tool <tool>] [--model <name>] [-- <extra args>]
+Usage: ./run.sh <job> [--tool <tool>] [--model <name>] [--build] [-- <extra args>]
 
 Starts agents/<job>/compose.yaml with 'docker compose run --rm <job>'.
 Jobs that support several tools also get agents/<job>/compose.<tool>.yaml.
@@ -38,6 +38,8 @@ Options:
   --model <name>   Model for this run only (default: MODEL_<TOOL>= in
                    agents/<job>/.env, e.g. MODEL_CLAUDE_CODE=, then MODEL=).
                    Passed straight to the tool, not validated.
+  --build          Rebuild the job image before starting (after Dockerfile or
+                   image changes). Without it, an existing image is reused.
   -- <args>        Everything after -- goes to the tool (aider / claude / goose).
   -h, --help       Show this help.
 
@@ -96,6 +98,7 @@ esac
 job="$1"; shift
 tool_override=""
 model_override=""
+build=()
 extra=()
 
 while [[ $# -gt 0 ]]; do
@@ -110,6 +113,8 @@ while [[ $# -gt 0 ]]; do
       tool_override="$2"; shift 2 ;;
     --tool=*)
       tool_override="${1#--tool=}"; shift ;;
+    --build)
+      build=(--build); shift ;;
     -h|--help) usage; exit 0 ;;
     --) shift; extra=("$@"); break ;;
     *) echo "error: unknown argument '$1' (tool args go after --)" >&2; exit 1 ;;
@@ -201,5 +206,33 @@ if [[ -f "$job_dir/masks" ]]; then
   [[ -s "$override" ]] && compose_files+=(-f "$override")
 fi
 
-echo "job: $job  tool: ${tool:-?}  model: $MODEL" >&2
-exec docker compose "${compose_files[@]}" run --rm "$job" ${extra[@]+"${extra[@]}"}
+# agents/<job>/target-network.yaml attaches the job to an existing Docker network
+# (e.g. a lab) named by TARGET_NETWORK=, on top of the job's own network
+target_network=""
+if [[ -f "$job_dir/target-network.yaml" ]]; then
+  # Same precedence as compose: shell environment first, then .env
+  target_network="${TARGET_NETWORK:-$(dotenv_get "$job_dir/.env" TARGET_NETWORK)}"
+fi
+if [[ -n "$target_network" ]]; then
+  if [[ "$target_network" =~ ^[0-9.]+(/[0-9]+)?$ ]]; then
+    echo "error: TARGET_NETWORK='$target_network' looks like an address. It must be a Docker network" >&2
+    echo "       name, from the NAME column of 'docker network ls'" >&2
+    exit 1
+  fi
+  # Accept a network ID too, but hand compose the name
+  if ! name="$(docker network inspect --format '{{.Name}}' "$target_network" 2>/dev/null)"; then
+    echo "error: no Docker network '$target_network' (TARGET_NETWORK in agents/$job/.env)." >&2
+    if nets="$(docker container inspect --format '{{range $k, $v := .NetworkSettings.Networks}}{{$k}} {{end}}' "$target_network" 2>/dev/null)"; then
+      echo "       '$target_network' is a container. Its networks: $nets" >&2
+    else
+      echo "       Use a name from 'docker network ls', and start the containers that own it first." >&2
+    fi
+    exit 1
+  fi
+  target_network="$name"
+  export TARGET_NETWORK="$name"
+  compose_files+=(-f "$job_dir/target-network.yaml")
+fi
+
+echo "job: $job  tool: ${tool:-?}  model: $MODEL${target_network:+  network: $target_network}" >&2
+exec docker compose "${compose_files[@]}" run --rm ${build[@]+"${build[@]}"} "$job" ${extra[@]+"${extra[@]}"}

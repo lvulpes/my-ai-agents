@@ -1,0 +1,23 @@
+# Shared by every tool. The tool-specific parts (image/build, entrypoint, state,
+# model) are in compose.<tool>.yaml; run.sh adds the one picked by TOOL= or --tool.
+name: network-debugging
+
+services:
+  network-debugging:
+    user: "1000:1000"
+    working_dir: /work
+    stdin_open: true
+    tty: true
+    # Default bridge network: the container reaches the LAN and the internet
+    # through NAT, but not services that only listen on the host's localhost.
+    # arping therefore only sees Docker's bridge, not the real LAN.
+    #
+    # Exception to the repo rule: no `no-new-privileges` here. Without it the
+    # file capabilities on nmap and arping (see Dockerfile) would be ignored.
+    # The bounding set is still only NET_RAW and the image has no setuid binaries.
+    cap_drop:
+      - ALL
+    cap_add:
+      - NET_RAW
+    volumes:
+      - ./cases:/work/cases
