@@ -18,6 +18,7 @@ services:
       GOOSE_PROVIDER: ${GOOSE_PROVIDER:-groq}
       GOOSE_MODEL: ${MODEL:?set MODEL_GOOSE in .env or pass --model}
       GROQ_API_KEY: ${GROQ_API_KEY:-}
+      OPENROUTER_API_KEY: ${OPENROUTER_API_KEY:-}
     volumes:
       - ./state/goose:/home/agent
       - ./.goosehints:/work/cases/.goosehints:ro
