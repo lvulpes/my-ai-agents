@@ -47,7 +47,17 @@ RUN useradd --create-home --uid 1000 --shell /bin/bash agent \
 # Raw sockets for exactly two tools (compose adds NET_RAW and allows file
 # capabilities for this job only). Everything else runs without privileges.
 # No setuid/setgid binaries are left, so nothing in the image can become root.
-RUN setcap cap_net_raw+ep "$(command -v nmap)" \
+# Kali packages set broader file capabilities (nmap: net_admin, net_bind_service, ...).
+# A file asking for capabilities outside the container's bounding set (NET_RAW
+# only) fails with "Operation not permitted", so those are removed first.
+# On Kali /usr/bin/nmap is a wrapper script; the capability goes on the real binary.
+RUN getcap -r /usr /opt 2>/dev/null | while read -r f caps; do \
+      case "$caps" in \
+        cap_net_raw=*) ;; \
+        *) echo "removing file capabilities $caps from $f"; setcap -r "$f" ;; \
+      esac; \
+    done \
+ && setcap cap_net_raw+ep /usr/lib/nmap/nmap \
  && setcap cap_net_raw+ep "$(command -v arping)" \
  && find / -xdev -type f -perm /6000 -exec chmod a-s {} +
 
