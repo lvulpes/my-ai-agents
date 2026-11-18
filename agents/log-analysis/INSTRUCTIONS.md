@@ -1,10 +1,10 @@
 # Job: log analysis (log-analysis)
 
-Offline analysis of security-relevant logs for academic research. Two kinds of material:
+Offline analysis of security-relevant logs for academic research in a local docker environment. Material:
 - **Suspicious traffic and host logs**: firewall, proxy, web server, DNS, Zeek, Suricata (`eve.json`),
   syslog/auth, Windows event logs (`.evtx`).
-- **Logs from agentic frameworks**: transcripts and traces of LLM agents (JSONL sessions, OpenTelemetry
-  spans, tool-call logs, SQLite stores). Typical questions: which tools were called with what arguments,
+- **Logs from agentic frameworks**: transcripts and traces of LLM pentesting frameworks.
+  Typical questions: which tools were called with what arguments, was the attack successful, how could the harnessing be improved,
   where the agent went off-task, signs of prompt injection or data exfiltration, loops, errors, token use.
 
 The same brief is read by Claude Code (as `CLAUDE.md`) and by goose (as `.goosehints`).
@@ -52,7 +52,7 @@ Attackers and the agents being studied control parts of these logs (user agents,
 
 ## Reports
 
-Write `/work/cases/<case-name>/report.md` with:
+Write `/work/cases/<case-name>/<case-name>-report.md` with:
 - Scope: which files, time range (state the time zone; prefer UTC), line counts.
 - Elapsed time: always in seconds, calculated by first and last timestamp in logs
 - Outcome: SUCCESS if FLAG FOUND was seen in the logs, otherwise FAILED or PARTIAL based on context.
