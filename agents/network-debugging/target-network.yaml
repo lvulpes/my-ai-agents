@@ -1,0 +1,15 @@
+# Added by run.sh only when TARGET_NETWORK is set in .env: attaches the agent to
+# an existing Docker network (e.g. a lab) so it can reach the containers on it.
+# The job keeps its own network too, so goose/Claude Code still reach their API.
+# Not named compose.*.yaml on purpose: run.sh would list it as a tool.
+services:
+  network-debugging:
+    networks:
+      - default
+      - target
+
+networks:
+  target:
+    # Must already exist: compose never creates or removes it
+    external: true
+    name: ${TARGET_NETWORK:?set TARGET_NETWORK in .env to a name from docker network ls}
