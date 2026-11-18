@@ -11,10 +11,15 @@ services:
       additional_contexts:
         base: service:goose-base
     image: my-ai-agents/network-debugging-goose:local
-    # Image entrypoint is `goose`; default to an interactive session.
+    # The job image is Kali (see Dockerfile), so it doesn't inherit the goose
+    # image's entrypoint, HOME or keyring setting; they are set here instead.
+    entrypoint: ["goose"]
+    # Default to an interactive session.
     # Override per run, e.g. ./run.sh network-debugging -- run -t "..."
     command: ["session"]
     environment:
+      HOME: /home/agent
+      GOOSE_DISABLE_KEYRING: "1"
       GOOSE_PROVIDER: ${GOOSE_PROVIDER:-openrouter}
       # With OpenRouter this is a `vendor/model` slug from openrouter.ai/models
       GOOSE_MODEL: ${MODEL:?set MODEL_GOOSE in .env or pass --model}

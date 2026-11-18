@@ -22,6 +22,8 @@ Jobs that need extra tooling have their own Dockerfile that starts with `FROM ba
 There is no Node or Python in this image: a job that needs them installs them itself
 (`agents/reverse-engineering` copies Node from the official `node` image for REA).
 Compose maps `base` to this image via `additional_contexts: base: service:goose-base`.
+Exception: `agents/network-debugging` builds on Kali and only copies `/usr/local` (the agent program) out of this image,
+so anything else set up here (user, env, entrypoint) must be repeated in that job.
 
 Build it alone:
 

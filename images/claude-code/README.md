@@ -12,6 +12,8 @@ Model: the job's compose passes `ANTHROPIC_MODEL=${MODEL}`.
 
 Jobs that need extra tooling (e.g. `agents/reverse-engineering`) have their own Dockerfile that starts
 with `FROM base`. Compose maps `base` to this image via `additional_contexts: base: service:claude-code-base`.
+Exception: `agents/network-debugging` builds on Kali and only copies `/usr/local` (the agent program) out of this image,
+so anything else set up here (user, env, entrypoint) must be repeated in that job.
 
 Build it alone:
 
