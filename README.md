@@ -17,7 +17,7 @@ run.sh                              launcher
 | `literature-review` | **goose** or claude-code, + poppler-utils (pdfinfo/pdftotext), qpdf, exiftool | goose: `openai/gpt-oss-120b` via OpenRouter; claude-code: `sonnet` | `workspace/` (summaries) | `papers/` (PDFs), `INSTRUCTIONS.md` (brief for both tools) |
 | `reverse-engineering` | **goose** or claude-code, + REA/Ghidra, binwalk/unblob, binutils | goose: `openai/gpt-oss-120b` via OpenRouter; claude-code: `opus` | `cases/` | `evidence/` (firmware, binaries, CTF files), `INSTRUCTIONS.md` (brief for both tools) |
 | `log-analysis` | **goose** or claude-code, + jq, miller, ripgrep, sqlite3, python (duckdb, pandas, python-evtx) | goose: `openai/gpt-oss-120b` via OpenRouter; claude-code: `sonnet` | `cases/` | `$WORKSPACE_DIR` or `evidence/` (logs: traffic, host, agent frameworks), `INSTRUCTIONS.md` (brief for both tools) |
-| `network-debugging` | **goose** or claude-code, + nmap, ping, traceroute/tracepath, arping, dig, nc, telnet (live traffic, NET_RAW for nmap/arping) | goose: `openai/gpt-oss-120b` via OpenRouter; claude-code: `sonnet` | `cases/` | `INSTRUCTIONS.md` (brief for both tools: scope and safety rules); optional `TARGET_NETWORK=` joins an existing Docker network (e.g. a lab) |
+| `network-debugging` | **goose** or claude-code on a **Kali** image, + nmap, ping, traceroute/tracepath, arping, dig, nc, telnet, metasploit, seclists/wordlists (live traffic, NET_RAW for nmap/arping) | goose: `openai/gpt-oss-120b` via OpenRouter; claude-code: `sonnet` | `cases/` | `INSTRUCTIONS.md` (brief for both tools: scope and safety rules); optional `TARGET_NETWORK=` joins an existing Docker network (e.g. a lab) |
 | `claude-developer` | claude-code + python/shellcheck | `opus` | `$WORKSPACE_DIR`, normally this repo (minus `masks`) | `CLAUDE.md` |
 
 **Tools.** A job with several tools has a shared `compose.yaml` plus one `compose.<tool>.yaml` per tool
@@ -71,6 +71,10 @@ MODEL=x docker compose -f compose.yaml -f compose.goose.yaml run --rm --entrypoi
 
 The first run builds the images. After that, the existing image is reused even when a Dockerfile changed:
 add `--build` to rebuild the job image (and its tool base) before starting. Docker's cache keeps unchanged steps, so it's fast when nothing changed.
+
+**Kali image (`network-debugging`).** This job's image starts from `kalilinux/kali-rolling` instead of the tool image.
+Its Dockerfile still uses `FROM base`, but only to copy the agent program (everything in the tool image's `/usr/local`),
+so `compose.goose.yaml` sets goose's entrypoint, `HOME` and `GOOSE_DISABLE_KEYRING` itself.
 
 **Reaching other containers (`network-debugging`).** Each job runs on its own Docker network, and Docker blocks traffic
 between networks. To debug containers on another network, set `TARGET_NETWORK=` in the job's `.env` to that network's
