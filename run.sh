@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# Launch a job: ./run.sh <job> [--tool <tool>] [--model <name>] [--build] [-- <extra args>]
+# Launch a job: ./run.sh <job> [--tool <tool>] [--model <name>] [--build] [--shell] [-- <extra args>]
 set -euo pipefail
 
 ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
@@ -27,7 +27,7 @@ list_jobs() {
 
 usage() {
   cat <<EOF
-Usage: ./run.sh <job> [--tool <tool>] [--model <name>] [--build] [-- <extra args>]
+Usage: ./run.sh <job> [--tool <tool>] [--model <name>] [--build] [--shell] [-- <extra args>]
 
 Starts agents/<job>/compose.yaml with 'docker compose run --rm <job>'.
 Jobs that support several tools also get agents/<job>/compose.<tool>.yaml.
@@ -40,7 +40,10 @@ Options:
                    Passed straight to the tool, not validated.
   --build          Rebuild the job image before starting (after Dockerfile or
                    image changes). Without it, an existing image is reused.
-  -- <args>        Everything after -- goes to the tool (aider / claude / goose).
+  --shell          Open bash in the job's container instead of starting the
+                   tool: same image, mounts and networks. No model needed.
+  -- <args>        Everything after -- goes to the tool (aider / claude / goose),
+                   or to bash with --shell (e.g. -- -c 'ip addr').
   -h, --help       Show this help.
 
 Jobs:
@@ -99,6 +102,7 @@ job="$1"; shift
 tool_override=""
 model_override=""
 build=()
+shell=""
 extra=()
 
 while [[ $# -gt 0 ]]; do
@@ -115,6 +119,8 @@ while [[ $# -gt 0 ]]; do
       tool_override="${1#--tool=}"; shift ;;
     --build)
       build=(--build); shift ;;
+    --shell)
+      shell=1; shift ;;
     -h|--help) usage; exit 0 ;;
     --) shift; extra=("$@"); break ;;
     *) echo "error: unknown argument '$1' (tool args go after --)" >&2; exit 1 ;;
@@ -162,6 +168,10 @@ else
   if [[ -z "$MODEL" && "$tool" == "$default_tool" ]]; then
     MODEL="$(dotenv_get "$job_dir/.env" MODEL)"
   fi
+fi
+# A shell doesn't use the model, but compose still requires MODEL to be set
+if [[ -z "$MODEL" && -n "$shell" ]]; then
+  MODEL="none"
 fi
 if [[ -z "$MODEL" ]]; then
   echo "error: no model. Set $model_key= in agents/$job/.env or pass --model" >&2
@@ -234,5 +244,14 @@ if [[ -n "$target_network" ]]; then
   compose_files+=(-f "$job_dir/target-network.yaml")
 fi
 
-echo "job: $job  tool: ${tool:-?}  model: $MODEL${target_network:+  network: $target_network}" >&2
-exec docker compose "${compose_files[@]}" run --rm ${build[@]+"${build[@]}"} "$job" ${extra[@]+"${extra[@]}"}
+entrypoint=()
+if [[ -n "$shell" ]]; then
+  entrypoint=(--entrypoint bash)
+  # Replace the tool's default command too (goose: `session`), or bash would
+  # try to run it as a script
+  [[ ${#extra[@]} -gt 0 ]] || extra=(-i)
+fi
+
+if [[ -n "$shell" ]]; then what="shell"; else what="model: $MODEL"; fi
+echo "job: $job  tool: ${tool:-?}  $what${target_network:+  network: $target_network}" >&2
+exec docker compose "${compose_files[@]}" run --rm ${build[@]+"${build[@]}"} ${entrypoint[@]+"${entrypoint[@]}"} "$job" ${extra[@]+"${extra[@]}"}
