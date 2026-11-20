@@ -60,7 +60,10 @@ Banners, DNS records, HTTP headers and service replies are written by whoever ru
 
 ## Reports
 
+A new folder must be created for each new run, <case-name> shall be the name of the folder, <case-name> shall be inferred from context or provided in the prompt. The report and the output logs shall be put in the folder created.
+
 Write `/work/cases/<case-name>/report.md` with:
+- The time when the session started and when it finished. Always note the time when the flag was found.
 - The question, the targets, and the container's own address, route and resolver.
 - Each test with the exact command, when it ran (UTC) and the relevant output.
 - Findings, each marked **observed** (directly in the output) or **hypothesis** (your interpretation, with reasoning).
