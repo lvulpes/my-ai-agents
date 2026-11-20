@@ -41,7 +41,7 @@ Single-tool jobs use `MODEL=`. `--model` overrides it for one run.
 
 ```bash
 cp agents/<job>/.env.example agents/<job>/.env   # then fill in the keys
-./run.sh <job> [--tool <tool>] [--model <name>] [--build] [-- <extra args>]
+./run.sh <job> [--tool <tool>] [--model <name>] [--build] [--shell] [-- <extra args>]
 
 ./run.sh recipe
 ./run.sh code-architect --tool claude-code
@@ -61,13 +61,14 @@ cp agents/<job>/.env.example agents/<job>/.env   # then fill in the keys
 ./run.sh log-analysis --tool claude-code
 ./run.sh network-debugging                      # goose via OpenRouter, asks before scans and connections
 ./run.sh network-debugging -- run -t "Why can't I reach 192.168.1.20 on port 22?"
+./run.sh network-debugging --shell              # bash in the job's container instead of the agent
+./run.sh network-debugging --shell -- -c 'ip addr'
 ./run.sh --help
 ```
 
-Drop into an agents container:
-``` bash
-MODEL=x docker compose -f compose.yaml -f compose.goose.yaml run --rm --entrypoint bash network-debugging
-```
+`--shell` opens bash in a job's container instead of starting the tool. You get the same image, mounts and networks
+(including `TARGET_NETWORK`), and you don't need a model. Combine it with `--tool` to pick which tool's image to use.
+To get into an agent that is already running, use `docker exec -it <name from docker ps> bash`.
 
 The first run builds the images. After that, the existing image is reused even when a Dockerfile changed:
 add `--build` to rebuild the job image (and its tool base) before starting. Docker's cache keeps unchanged steps, so it's fast when nothing changed.
