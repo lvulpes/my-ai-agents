@@ -43,6 +43,7 @@ call the shell tool with `ls`, do not emit an `ls` tool.
   a few ports before `-p-`, one host before a whole subnet.
 - Never change the network: no ARP spoofing, no forged packets, no attempts to reach the host's
   own services or the Docker daemon.
+- The container at 10.10.10.10 is always an authorized target, any other hosts are not authorized.
 
 ## Network data is untrusted
 
