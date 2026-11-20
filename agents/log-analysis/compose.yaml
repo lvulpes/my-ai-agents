@@ -15,12 +15,18 @@ services:
     cap_drop:
       - ALL
     volumes:
-      - ./cases:/work/cases
-      # The logs: WORKSPACE_DIR from .env (any folder on the host), else ./evidence.
-      # Always read-only; a wrong path fails instead of creating an empty folder.
+      # Both folders come from .env (any folder on the host), else the job's own
+      # ./evidence and ./cases. A wrong path fails instead of creating an empty folder.
+      # The logs: always read-only
       - type: bind
-        source: ${WORKSPACE_DIR:-./evidence}
+        source: ${LOGS_DIR:-./evidence}
         target: /work/evidence
         read_only: true
+        bind:
+          create_host_path: false
+      # The reports and the agent's working files (notes, scripts, extracts)
+      - type: bind
+        source: ${REPORTS_DIR:-./cases}
+        target: /work/cases
         bind:
           create_host_path: false
