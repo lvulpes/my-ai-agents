@@ -10,10 +10,17 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
       python3 python3-venv \
       shellcheck yamllint \
       jq curl ca-certificates \
+      tcpdump tshark \
  && rm -rf /var/lib/apt/lists/*
 
 # uv: official static binaries, copied from Astral's image (matches the build arch)
 COPY --from=ghcr.io/astral-sh/uv:0.9.5 /uv /uvx /usr/local/bin/
+
+# Python packages for the pcap feature-extraction pipeline, installed into Debian's
+# python3 by explicit path so aider's own venv (first `python` on PATH there) is untouched.
+# PyYAML is left out: apt already installs it as python3-yaml (a yamllint dependency).
+RUN uv pip install --no-cache --python /usr/bin/python3 --system --break-system-packages \
+      dpkt scapy numpy pandas scipy pyarrow pytest
 
 # helm: pinned release from get.helm.sh, checked against its published sha256
 ARG HELM_VERSION=v3.19.0
