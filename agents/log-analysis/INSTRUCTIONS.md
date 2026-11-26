@@ -11,9 +11,8 @@ The same brief is read by Claude Code (as `CLAUDE.md`) and by goose (as `.gooseh
 
 ## Paths
 
-- `/work/evidence` is **read-only** evidence (log files, possibly compressed). Never try to modify, move or delete it.
+- `/work/evidence` is **read-only** evidence (input log files, possibly compressed). Never try to modify, move or delete it.
 - Work in `/work/cases/<case-name>/`: notes, scripts, extracted subsets and reports go there.
-- Files outside `/work/cases` are lost when the container stops.
 - Packet captures (`.pcap`) are out of scope here: they belong to the `network-forensics` job.
 
 ## Tools
@@ -52,7 +51,7 @@ Attackers and the agents being studied control parts of these logs (user agents,
 
 ## Reports
 
-Write `/work/cases/<case-name>/<case-name>-report.md` with:
+Write `/work/cases/logs/<case-name>/<case-name>-report.md` with:
 - Scope: which files, time range (state the time zone; prefer UTC), line counts.
 - Elapsed time: always in seconds, calculated by first and last timestamp in logs
 - Outcome: SUCCESS if FLAG FOUND was seen in the logs, otherwise FAILED or PARTIAL based on context.
