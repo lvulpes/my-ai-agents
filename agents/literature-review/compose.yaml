@@ -11,9 +11,18 @@ services:
     tty: true
     security_opt:
       - no-new-privileges:true
+      # No :z relabel, so the papers folder (any folder on the host) is never modified
+      - label:disable
     cap_drop:
       - ALL
     volumes:
-      # The PDFs are never modified; anything the agent makes goes to workspace/
-      - ./papers:/work/papers:ro,z
+      # The papers are never modified; anything the agent makes goes to workspace/.
+      # PAPERS_DIR from .env (any folder on the host), else the job's own ./papers.
+      # A wrong path fails instead of creating an empty folder.
+      - type: bind
+        source: ${PAPERS_DIR:-./papers}
+        target: /work/papers
+        read_only: true
+        bind:
+          create_host_path: false
       - ./workspace:/work/workspace:z

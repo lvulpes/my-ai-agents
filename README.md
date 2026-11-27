@@ -14,7 +14,7 @@ run.sh                              launcher
 | `recipe` | **aider** (architect) or claude-code | aider: `gemini/gemini-3.8-flash`, edits by `groq/openai/gpt-oss-120b`; claude-code: `sonnet` | `workspace/` | instructions (`GEMINI.md`, `.gemini/system.md`) |
 | `code-architect` | **aider** (architect) or claude-code, + python/uv, shellcheck/yamllint, helm, jq/curl | aider: `openrouter/google/gemini-3.1-pro-preview`, edits by `openrouter/deepseek/deepseek-v3.2`; claude-code: `opus` | `$WORKSPACE_DIR` | `CLAUDE.md` (git rules: you commit and push) |
 | `network-forensics` | **goose** or aider, + tshark/tcpdump (read-only, no capture), python (scapy, pyshark, dpkt, pandas, ja4plus) | goose: `openai/gpt-oss-120b` via OpenRouter; aider: `openrouter/openai/gpt-oss-120b` | `cases/` | `evidence/` (pcaps), `.goosehints` (goose brief) |
-| `literature-review` | **goose** or claude-code, + poppler-utils (pdfinfo/pdftotext), qpdf, exiftool | goose: `openai/gpt-oss-120b` via OpenRouter; claude-code: `sonnet` | `workspace/` (summaries) | `papers/` (PDFs), `INSTRUCTIONS.md` (brief for both tools) |
+| `literature-review` | **goose** or claude-code, + poppler-utils (pdfinfo/pdftotext), qpdf, exiftool | goose: `openai/gpt-oss-120b` via OpenRouter; claude-code: `sonnet` | `workspace/<project>/` (summaries, text versions of PDFs; one folder per project proposal) | `$PAPERS_DIR` or `papers/` (PDFs, `.md`/`.txt`), `INSTRUCTIONS.md` (brief for both tools) |
 | `reverse-engineering` | **goose** or claude-code, + REA/Ghidra, binwalk/unblob, binutils | goose: `openai/gpt-oss-120b` via OpenRouter; claude-code: `opus` | `cases/` | `evidence/` (firmware, binaries, CTF files), `INSTRUCTIONS.md` (brief for both tools) |
 | `log-analysis` | **goose** or claude-code, + jq, miller, ripgrep, sqlite3, python (duckdb, pandas, python-evtx) | goose: `openai/gpt-oss-120b` via OpenRouter; claude-code: `sonnet` | `$REPORTS_DIR` or `cases/` | `$LOGS_DIR` or `evidence/` (logs: traffic, host, agent frameworks), `INSTRUCTIONS.md` (brief for both tools) |
 | `network-debugging` | **goose** or claude-code on a **Kali** image, + nmap, ping, traceroute/tracepath, arping, dig, nc, telnet, metasploit, seclists/wordlists (live traffic, NET_RAW for nmap/arping) | goose: `openai/gpt-oss-120b` via OpenRouter; claude-code: `sonnet` | `cases/` | `INSTRUCTIONS.md` (brief for both tools: scope and safety rules); optional `TARGET_NETWORK=` joins an existing Docker network (e.g. a lab) |
@@ -54,6 +54,7 @@ cp agents/<job>/.env.example agents/<job>/.env   # then fill in the keys
 ./run.sh literature-review                       # goose via OpenRouter (default)
 ./run.sh literature-review --model google/gemini-2.5-pro
 ./run.sh literature-review --tool claude-code
+PAPERS_DIR=~/papers/topic-b ./run.sh literature-review   # another papers folder; output goes to workspace/<project>/
 ./run.sh reverse-engineering                     # goose via OpenRouter, REA loaded as MCP extension
 ./run.sh reverse-engineering --tool claude-code -- --resume
 ./run.sh log-analysis                            # goose via OpenRouter, asks before risky commands
